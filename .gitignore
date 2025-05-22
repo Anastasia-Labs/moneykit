@@ -1,3 +1,7 @@
+.direnv/
+build/
+crfa-offchain-data-registry/
+
 # Logs
 logs
 *.log
