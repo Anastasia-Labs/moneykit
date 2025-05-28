@@ -1,5 +1,6 @@
 export * as bf from "./blockfrost";
 export * as cache from "./cache";
+export * as logger from "./logger";
 export * as lucid from "./lucid";
 
 import { Amounts, ScDesc } from "../types/_";
@@ -71,8 +72,10 @@ export const util = {
   },
 
   formatAmount: (amount: number, currency: string) =>
-    // TODO: Thousand Separator
-    `${amount} ${currency}${Math.abs(amount) > 1 && currency.toLowerCase().endsWith("token") ? "s" : ""}`,
+    `${Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
+    }).format(amount)} ${currency}${Math.abs(amount) > 1 && currency.toLowerCase().endsWith("token") ? "s" : ""}`,
 
   weighMetadataMsg: (label: string, keywords: string[], metadata: Record<string, any>[]) => {
     if (!metadata.length) return 0;
