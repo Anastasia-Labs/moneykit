@@ -30,7 +30,9 @@ export async function score(
   ]);
 
   const description = "Executed an order on Minswap";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -45,7 +47,9 @@ export async function score(
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   if (!other.length) return [0, undefined];
 
   const hasMinswap = other.find(
@@ -68,7 +72,9 @@ async function calcW1(other: Account[]): Promise<CalculatedScore<undefined>> {
  * @param withdrawal Whether is there some withdrawals associated with the user address
  * @returns [Score, AdditionalData]
  */
-async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
+async function calcW2(withdrawal?: Asset): Promise<
+  CalculatedScore<undefined>
+> {
   return [withdrawal ? 0 : weighting.withdrawal, undefined];
 }
 
@@ -77,6 +83,12 @@ async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", ["Minswap"], metadata) * weighting.metadata, undefined];
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg("674", ["Minswap"], metadata),
+    undefined,
+  ];
 }
