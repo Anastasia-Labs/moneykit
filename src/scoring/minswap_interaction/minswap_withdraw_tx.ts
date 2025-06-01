@@ -37,16 +37,39 @@ export async function score(
     const withdrewTokens = Object.keys(receivedTokens)
       .map(
         (currency) =>
-          util.formatAmount(receivedTokens[currency] - (currency === "ADA" ? 2 : 0), currency),
+          util.formatAmount(
+            receivedTokens[currency] - (currency === "ADA" ? 2 : 0),
+            currency,
+          ),
       );
 
-    const description = `Withdrew ${util.joinWords(withdrewTokens)} from ${fromLP.slice(0, fromLP.length - 3)} pool on Minswap`;
-    const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+    let description = "";
+    let divider = 0;
 
-    const score = weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    );
+    if (withdrewTokens.length && fromLP.length > 3) {
+      description = `Withdrew ${util.joinWords(withdrewTokens)} from ${fromLP.slice(0, fromLP.length - 3)} pool on Minswap`;
+      divider = 1;
+    } else if (withdrewTokens.length) {
+      description = `Withdrew ${util.joinWords(withdrewTokens)} from Minswap`;
+      divider = 2;
+    } else if (fromLP.length > 3) {
+      description = `Withdrew from ${fromLP.slice(0, fromLP.length - 3)} pool on Minswap`;
+      divider = 2;
+    } else {
+      description = "Withdrew from Minswap";
+      divider = 4;
+    }
+
+    const type = intermediaryTx.type === `${undefined}`
+      ? "amm_dex"
+      : intermediaryTx.type;
+
+    const score = parseFloat(
+      weights.reduce(
+        (sum, [weight]) => sum + weight,
+        0,
+      ).toFixed(2),
+    ) / divider;
 
     return { type, description, score };
   } else {
@@ -65,14 +88,18 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<[Record<string, number>, string] | undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<[Record<string, number>, string] | undefined>
+> {
   const scriptTotal: Record<string, number> = {};
   const nonScriptTotal: Record<string, number> = {};
 
   for (const account of user) {
     try {
-      const { paymentCredential, stakeCredential } = await lucid.getAddressDetails(account.address);
-      if (paymentCredential?.type === "Script" || stakeCredential?.type === "Script") {
+      const { paymentCredential, stakeCredential } =
+        await lucid.getAddressDetails(account.address);
+      if (paymentCredential?.type === "Script" ||
+        stakeCredential?.type === "Script") {
         for (const { currency, amount } of account.total) {
           const nonLP = !currency.endsWith(" LP");
           if (nonLP || amount > 0) continue; // skip NonLP Tokens or positive amounts
@@ -94,12 +121,15 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<[Record<string, 
   if (lpTokens.length !== 1) return [0, undefined];
   const [lpToken] = lpTokens;
 
-  return [Object.keys(nonScriptTotal).length ? weighting.userAccounts : 0, [nonScriptTotal, lpToken]];
+  return [
+    Object.keys(nonScriptTotal).length ? weighting.userAccounts : 0,
+    [nonScriptTotal, lpToken],
+  ];
 }
 
 /**
  * The user will never withdraw as a the transaction is executed by some batchers.
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
 async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
@@ -111,6 +141,16 @@ async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap Order Executed".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "Minswap Order Executed".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }

@@ -11,9 +11,9 @@ import { util } from "../../util/_";
 // other.role there's a Minswap Yield Farming... with negative LP Tokens
 // metadata { label:"674", json_metadata:{ msg:"Minswap: ... Withdraw liquidity" } }
 const weighting = {
-  userAccounts: .10,
+  userAccounts: .40,
   otherAccounts: .40,
-  metadata: .50,
+  metadata: .20,
 };
 
 export async function score(
@@ -32,18 +32,22 @@ export async function score(
   const [, userTokens] = weights[0];
   const [, yieldFarming] = weights[1];
 
-  const lpTokens = !userTokens ? undefined : Object.keys(userTokens)
+  const lpTokens = Object.keys(userTokens)
     .map(
       (currency) =>
         util.formatAmount(userTokens[currency], currency),
     );
 
-  const description = `Withdrew ${lpTokens ? util.joinWords(lpTokens) : "liquidity"} from Minswap`;
+  const description = `Withdrew ${lpTokens.length
+    ? util.joinWords(lpTokens)
+    : "liquidity"} from Minswap`;
   const type = yieldFarming ? "yield_farming" : intermediaryTx.type;
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2),
   );
 
   return { type, description, score };
@@ -54,13 +58,19 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const lpTokens = user.reduce(
     (sum, { total }) => {
       total.reduce(
         (sum, { currency, amount }) => {
-          if ((currency.endsWith(" LP") || (currency.startsWith("asset") && currency.length === 44)) && amount > 0)
-            sum[currency] = (sum[currency] ?? 0) + amount;
+          if (
+            amount > 0 && (
+              currency.endsWith(" LP") ||
+              (currency.startsWith("asset") && currency.length === 44)
+            )
+          ) sum[currency] = (sum[currency] ?? 0) + amount;
           return sum;
         },
         sum,
@@ -79,14 +89,17 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<Account | undefined>> {
-  if (!other.length) return [0, undefined];
-
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<Account | undefined>
+> {
   const yieldFarming = other.find(
     ({ role, total }) =>
       role.startsWith("Minswap Yield Farming") && total.find(
         ({ currency, amount }) =>
-          (currency.endsWith(" LP") || (currency.startsWith("asset") && currency.length === 44)) && amount < 0
+          amount < 0 && (
+            currency.endsWith(" LP") ||
+            (currency.startsWith("asset") && currency.length === 44)
+          )
       )
   );
   return [yieldFarming ? weighting.otherAccounts : 0, yieldFarming];
@@ -97,6 +110,16 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<Account | undef
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap Withdraw liquidity".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "Minswap Withdraw liquidity".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }

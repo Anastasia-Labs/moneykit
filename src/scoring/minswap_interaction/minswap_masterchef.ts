@@ -10,8 +10,8 @@ import { util } from "../../util/_";
 // user accounts to construct the received tokens
 // metadata { label:"674", json_metadata:{ msg:"Minswap: MasterChef" } }
 const weighting = {
-  userAccounts: .10,
-  metadata: .90,
+  userAccounts: .25,
+  metadata: .75,
 };
 
 export async function score(
@@ -34,15 +34,25 @@ export async function score(
         util.formatAmount(userTokens[currency], currency),
     );
 
-  const description = `Received ${util.joinWords(receivedTokens)} from Minswap`;
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  if (receivedTokens.length) {
+    const description = `Received ${util.joinWords(receivedTokens)} from Minswap`;
+    const type = intermediaryTx.type === `${undefined}`
+      ? "amm_dex"
+      : intermediaryTx.type;
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+    const score = weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    );
 
-  return { type, description, score };
+    return { type, description, score };
+  } else {
+    return {
+      type: intermediaryTx.type,
+      description: intermediaryTx.description,
+      score: 0,
+    };
+  };
 }
 
 /**
@@ -50,7 +60,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -72,6 +84,15 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap MasterChef".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util.weighMetadataMsg(
+      "674",
+      "Minswap MasterChef".split(" "),
+      metadata,
+    ),
+    undefined,
+  ];
 }

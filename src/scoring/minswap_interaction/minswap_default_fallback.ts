@@ -69,7 +69,7 @@ async function calcW1(other: Account[]): Promise<
 
 /**
  * The user will never withdraw as a the transaction is executed by some batchers.
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
 async function calcW2(withdrawal?: Asset): Promise<
