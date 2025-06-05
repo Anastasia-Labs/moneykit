@@ -12,10 +12,10 @@ import { util } from "../../util/_";
 // no withdrawal
 // no metadata
 const weighting = {
-  userAccounts: .40,
+  userAccounts: .45,
   otherAccounts: .30,
   withdrawal: .20,
-  metadata: .10,
+  metadata: .05,
 };
 
 export async function score(
@@ -32,23 +32,15 @@ export async function score(
     calcW4(metadata),
   ]);
 
-  const totalTokens: Record<string, number> = {
-    // [network_fee.currency]: network_fee.amount,
-  };
+  const totalTokens: Record<string, number> = {};
 
   const [, inputTokens] = weights[0];
-  // const [, outputTokens] = weights[1];
 
   Object.keys(inputTokens).forEach(
     (currency) => {
       if (currency !== "ADA")
         totalTokens[currency] = (totalTokens[currency] ?? 0) + inputTokens[currency];
     });
-  // Object.keys(outputTokens).forEach(
-  //   (currency) => {
-  //     if (currency === "ADA")
-  //       totalTokens[currency] = (totalTokens[currency] ?? 0) + outputTokens[currency];
-  //   });
 
   const receiveTokens = Object.keys(totalTokens)
     .filter(
@@ -63,9 +55,11 @@ export async function score(
   const description = `Received ${util.joinWords(receiveTokens)}`.trim();
   const type = "receive_tokens";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2)
   );
 
   return { type, description, score };
@@ -76,7 +70,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -94,7 +90,10 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
   const amounts = Object.values(assets);
   if (!amounts.length) return [0, assets];
 
-  const negativesCount = amounts.filter((amount) => amount > 0).length;
+  const negativesCount = amounts.filter(
+    (amount) =>
+      amount > 0
+  ).length;
   return [amounts.length > 1 // to differentiate with receive_ada
     ? weighting.userAccounts * negativesCount / amounts.length
     : 0, assets];
@@ -105,7 +104,9 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const assets = other.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -121,16 +122,24 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<Record<string, 
   );
 
   // filter out ADA to differentiate with receive_ada
-  const currencies = Object.keys(assets).filter((currency) => currency !== "ADA" && assets[currency]);
+  const currencies = Object.keys(assets).filter(
+    (currency) =>
+      currency !== "ADA" && assets[currency]
+  );
   if (!currencies.length) return [0, assets];
 
-  const negativesCount = currencies.filter((currency) => assets[currency] < 0).length;
+  const negativesCount = currencies.filter(
+    (currency) =>
+      assets[currency] < 0
+  ).length;
   return [weighting.otherAccounts * negativesCount / currencies.length, assets];
 }
 
 /**
- * It is impossible to withdraw as a beneficiary, the sender may withdraw their stake rewards but not the receivers.
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * It is impossible to withdraw as a beneficiary,
+ * the sender may withdraw their stake rewards but not the receivers.
+ * 
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
 async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
@@ -142,6 +151,8 @@ async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW4(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW4(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

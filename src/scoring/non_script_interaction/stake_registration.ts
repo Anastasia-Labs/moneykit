@@ -9,14 +9,14 @@ import { CalculatedScore, TransactionScore } from "../../types/_";
 // txInfo.stake_cert_count && !txInfo.delegation_count
 // user.total.length === 1 (currency:ADA,amount:-#.##)
 // other.role.length === 0
-// no withdrawal
+// unlikely to have a withdrawal
 // no metadata
 const weighting = {
-  stakeRegistration: .25,
+  stakeRegistration: .50,
   userAccounts: .20,
-  otherAccounts: .20,
-  withdrawal: .25,
-  metadata: .10,
+  otherAccounts: .15,
+  withdrawal: .10,
+  metadata: .05,
 };
 
 export async function score(
@@ -37,9 +37,11 @@ export async function score(
   const description = "Stake Registration";
   const type = "stake_registration";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2)
   );
 
   return { type, description, score };
@@ -49,16 +51,27 @@ export async function score(
  * Stake certs count must be greater than 0 and Delegation count must be 0
  * @param txInfo Blockfrost TxInfo
  */
-async function calcW0(txInfo: TransactionInfo): Promise<CalculatedScore<undefined>> {
-  return [txInfo.stake_cert_count && !txInfo.delegation_count ? weighting.stakeRegistration : 0, undefined];
+async function calcW0(txInfo: TransactionInfo): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    txInfo.stake_cert_count && !txInfo.delegation_count
+      ? weighting.stakeRegistration
+      : 0,
+    undefined,
+  ];
 }
 
 /**
- * There may be more than 1 associated addresses, but the aggregate currency should only be ADA.
+ * There may be more than 1 associated addresses,
+ * but the aggregate currency should only be ADA.
+ * 
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -76,25 +89,32 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
   const currencies = Object.keys(assets);
   if (!currencies.length || assets.ADA > 0) return [0, undefined];
 
-  const adaCount = currencies.filter((currency) => currency === "ADA").length;
+  const adaCount = currencies.filter(
+    (currency) =>
+      currency === "ADA"
+  ).length;
   return [weighting.userAccounts * adaCount / currencies.length, undefined];
 }
 
 /**
- * Usually no other accounts, unless the address has other associated addresses.
+ * No other account.
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [other.length ? 0 : weighting.otherAccounts, undefined];
 }
 
 /**
- * No withdrawal.
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * It's unlikely to have a withdrawal.
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
-async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
+async function calcW3(withdrawal?: Asset): Promise<
+  CalculatedScore<undefined>
+> {
   return [withdrawal ? 0 : weighting.withdrawal, undefined];
 }
 
@@ -103,6 +123,8 @@ async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW4(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW4(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

@@ -1,5 +1,7 @@
 // type: stake_delegation
-// description: Delegated stake to pool: {[TICKER] PoolName | PoolName} | Stake Delegation
+//
+// description:
+// Delegated stake to pool: {[TICKER] PoolName | PoolName} | Stake Delegation
 
 import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
@@ -9,12 +11,11 @@ import { CalculatedScore, TransactionScore } from "../../types/_";
 
 // txInfo.delegation_count > 0
 // user.total currency:ADA amount:-#.##
-// other.role.length === 0
+// no other account
 // no metadata
 const weighting = {
-  stakeDelegation: .50,
-  userAccounts: .35,
-  otherAccounts: .10,
+  stakeDelegation: .85,
+  userAccounts: .10,
   metadata: .05,
 };
 
@@ -28,8 +29,7 @@ export async function score(
   const weights = await Promise.all([
     calcW0(txInfo, lucidAddressDetails.stakeCredential?.hash),
     calcW1(accounts.user),
-    calcW2(accounts.other),
-    calcW3(metadata),
+    calcW2(metadata),
   ]);
 
   const [, poolMetadata] = weights[0];
@@ -43,12 +43,16 @@ export async function score(
         `${poolTicker} ${poolMetadata.name}`
         : poolMetadata.name)
       : undefined;
-  const description = poolName ? `Delegated stake to pool: ${poolName}` : "Stake Delegation";
+  const description = poolName
+    ? `Delegated stake to pool: ${poolName}`
+    : "Stake Delegation";
   const type = "stake_delegation";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2)
   );
 
   return { type, description, score };
@@ -62,12 +66,15 @@ export async function score(
 async function calcW0(
   txInfo: TransactionInfo,
   stakeAddress?: string,
-): Promise<CalculatedScore<PoolMetadata | undefined>> {
+): Promise<
+  CalculatedScore<PoolMetadata | undefined>
+> {
   if (!stakeAddress) return [0, undefined];
 
   try {
     if (txInfo.delegation_count) {
-      const delegations = await bf.getTransactionDelegations(txInfo.hash);
+      const delegations =
+        await bf.getTransactionDelegations(txInfo.hash);
       for (const { address, pool_id } of delegations) {
         const sk = await lucid.stakeCredentialOf(address);
         if (sk?.hash === stakeAddress) {
@@ -76,18 +83,24 @@ async function calcW0(
         }
       }
     }
-    return [weighting.stakeDelegation / 2, undefined]; // has delegation_count, but somehow failed to get pool metadata
+    // has delegation_count,
+    return [weighting.stakeDelegation / 2, undefined];
+    // but somehow failed to get pool metadata
   } catch {
     return [0, undefined];
   }
 }
 
 /**
- * There may be more than 1 associated addresses, but the AGGREGATE movement should only be ADA.
+ * There may be more than 1 associated addresses,
+ * but the AGGREGATE movement should only be ADA.
+ * 
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -119,19 +132,12 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
 }
 
 /**
- * Usually no other accounts, unless the address has other associated addresses.
- * @param other Other Accounts
- * @returns [Score, AdditionalData]
- */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
-  return [other.length ? 0 : weighting.otherAccounts, undefined];
-}
-
-/**
  * The sender can optionally put some arbitrary metadata though.
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

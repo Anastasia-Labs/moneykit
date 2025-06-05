@@ -11,10 +11,10 @@ import { CalculatedScore, TransactionScore } from "../../types/_";
 // other.role.length === 0
 // metadata label:6862
 const weighting = {
-  stakeDelegation: .50,
-  userAccounts: .15,
-  otherAccounts: .10,
-  metadata: .25,
+  stakeDelegation: .35,
+  userAccounts: .20,
+  otherAccounts: .15,
+  metadata: .30,
 };
 
 export async function score(
@@ -34,9 +34,11 @@ export async function score(
   const description = "Delegated stake to multiple pools";
   const type = "multi_stake_delegation";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2),
   );
 
   return { type, description, score };
@@ -51,15 +53,22 @@ async function calcW0(
   txInfo: TransactionInfo,
   stakeAddress?: string,
 ): Promise<CalculatedScore<undefined>> {
-  return [stakeAddress && txInfo.delegation_count > 1 ? weighting.stakeDelegation : 0, undefined];
+  return [
+    stakeAddress && txInfo.delegation_count > 1 ? weighting.stakeDelegation : 0,
+    undefined,
+  ];
 }
 
 /**
- * There may be more than 1 associated addresses, but the AGGREGATE movement should only be ADA.
+ * There may be more than 1 associated addresses,
+ * but the AGGREGATE movement should only be ADA.
+ * 
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -91,7 +100,7 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
 }
 
 /**
- * Usually no other accounts, unless the address has other associated addresses.
+ * Should be no other account.
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
@@ -108,7 +117,9 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
 async function calcW3(
   metadata: Record<string, any>[],
   txInfo: TransactionInfo,
-): Promise<CalculatedScore<undefined>> {
+): Promise<
+  CalculatedScore<undefined>
+> {
   if (!metadata.length) return [0, undefined];
 
   const label6862 = metadata.filter(

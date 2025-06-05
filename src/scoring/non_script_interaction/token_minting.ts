@@ -30,11 +30,19 @@ export async function score(
       (currency) => {
         const qty = totalTokens[currency];
         const absQty = Math.abs(qty);
-        return `${qty < 0 ? "burned" : "minted"} ${util.formatAmount(absQty, currency)}`;
+        return `${qty < 0 ?
+          "burned" :
+          "minted"} ${util
+            .formatAmount(
+              absQty,
+              currency,
+            )}`;
       }
     );
 
-  const description = `Token ${mintedTokens.length ? util.joinWords(mintedTokens) : "Minting/Burning"}`;
+  const description = `Token ${mintedTokens.length
+    ? util.joinWords(mintedTokens)
+    : "Minting/Burning"}`;
   const type = "token_minting";
 
   const score = weights.reduce(
@@ -54,7 +62,9 @@ export async function score(
 async function calcW1(
   user: Account[],
   txUTXOs: TransactionUTXOs,
-): Promise<CalculatedScore<Record<string, number>>> {
+): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const inputAssets = txUTXOs.inputs.reduce(
     (sum, input) => {
       input.amount.reduce(
@@ -90,12 +100,11 @@ async function calcW1(
     const amount = totalAssets[unit];
     if (amount === 0n) continue; // skip no movement
     const { metadata, onchain_metadata, fingerprint } = await bf.getAssetInfo(unit);
-    const currency = metadata?.name ?? onchain_metadata?.name ?? fingerprint ?? unit;
-    const decimals = metadata?.decimals ?? 0;
-    const t = BigInt(10 ** decimals);
-    const a = amount / t;
-    const b = (amount < 0n ? -amount : amount) % t;
-    totalMintedAssets[currency] = parseFloat(`${a ? a : amount < 0n ? "-0" : "0"}.${`${b}`.padStart(decimals, "0")}`);
+    const currency =
+      metadata?.name ?? onchain_metadata?.name ?? fingerprint ?? unit;
+    const decimals =
+      metadata?.decimals ?? 0;
+    totalMintedAssets[currency] = util.convertAmountToNumber(amount, decimals);
   }
 
   const userMintedAssets = user.reduce(
@@ -113,5 +122,8 @@ async function calcW1(
     {} as Record<string, number>,
   );
 
-  return [Object.keys(userMintedAssets).length ? weighting.tokenMinting : 0, userMintedAssets];
+  return [
+    Object.keys(userMintedAssets).length ? weighting.tokenMinting : 0,
+    userMintedAssets,
+  ];
 }
