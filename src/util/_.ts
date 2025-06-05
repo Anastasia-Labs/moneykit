@@ -23,7 +23,12 @@ export const util = {
     const t = BigInt(10 ** decimals);
     const a = amount / t;
     const b = (amount < 0n ? -amount : amount) % t;
-    return parseFloat(`${a ? a : (amount < 0n ? "-0" : "0")}.${`${b}`.padStart(decimals, "0")}`);
+    return parseFloat(
+      `${a ? a
+        : (amount < 0n ? "-0" : "0")
+      }.${`${b}`
+        .padStart(decimals, "0")
+      }`);
   },
 
   getTotalAmounts: (amounts: Amounts): Promise<Asset[]> =>
@@ -34,12 +39,17 @@ export const util = {
           let fromUnit = util.isLovelaceOrADA(currency)
             ? { metadata: { name: currency, decimals: 6 } } as bf.AssetInfo
             : await bf.getAssetInfo(currency);
-          if (fromUnit.error) fromUnit = { metadata: { name: currency, decimals: 0 } } as bf.AssetInfo;
+          if (fromUnit.error) fromUnit = {
+            metadata: { name: currency, decimals: 0 },
+          } as bf.AssetInfo;
 
           const decimals = fromUnit.metadata?.decimals ?? 0;
 
           return {
-            currency: fromUnit.metadata?.name ?? fromUnit.onchain_metadata?.name ?? fromUnit.fingerprint ?? currency,
+            currency: fromUnit.metadata?.name
+              ?? fromUnit.onchain_metadata?.name
+              ?? fromUnit.fingerprint
+              ?? currency,
             amount: util.convertAmountToNumber(amounts[currency], decimals),
           };
         },
@@ -56,7 +66,10 @@ export const util = {
         async (address): Promise<Account> => {
           return {
             address,
-            role: addressRole ?? lookup[address]?.role ?? `Unknown ${await util.isKeyAddress(address) ? "Address" : "Script"}`,
+            role: addressRole
+              ?? lookup[address]?.role
+              ?? `Unknown ${await util.isKeyAddress(address)
+                ? "Address" : "Script"}`,
             total: await util.getTotalAmounts(addressAmounts[address]),
           };
         },
@@ -68,16 +81,25 @@ export const util = {
     if (words.length === 2) return words.join(" and ");
 
     const last = words.length - 1;
-    return util.joinWords([words.slice(0, last).join(", "), words[last]]);
+    return util.joinWords([
+      words.slice(0, last).join(", "),
+      words[last],
+    ]);
   },
 
   formatAmount: (amount: number, currency: string) =>
     `${Intl.NumberFormat(undefined, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 6,
-    }).format(amount)} ${currency}${Math.abs(amount) > 1 && currency.toLowerCase().endsWith("token") ? "s" : ""}`,
+    }).format(amount)} ${currency}${Math.abs(amount) > 1 &&
+      currency.toLowerCase().endsWith("token")
+      ? "s" : ""}`,
 
-  weighMetadataMsg: (label: string, keywords: string[], metadata: Record<string, any>[]) => {
+  weighMetadataMsg: (
+    label: string,
+    keywords: string[],
+    metadata: Record<string, any>[],
+  ) => {
     if (!metadata.length) return 0;
 
     const keywordsCount = keywords.length;

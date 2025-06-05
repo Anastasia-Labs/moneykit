@@ -11,9 +11,9 @@ import { util } from "../../util/_";
 // other.role are Unknown Addresses
 // no metadata
 const weighting = {
-  userAccounts: .50,
-  otherAccounts: .40,
-  metadata: .10,
+  userAccounts: .75,
+  otherAccounts: .20,
+  metadata: .05,
 };
 
 export async function score(
@@ -34,22 +34,12 @@ export async function score(
   };
 
   const [, inputTokens] = weights[0];
-  // const [, outputTokens] = weights[1];
 
   Object.keys(inputTokens).forEach(
     (currency) => {
-      // if (currency === "ADA")
-      //   totalTokens[currency] = (totalTokens[currency] ?? 0) + inputTokens[currency];
-      // else
-      //   totalTokens[currency] = (totalTokens[currency] ?? 0) - inputTokens[currency];
       if (currency !== "ADA")
         totalTokens[currency] = (totalTokens[currency] ?? 0) - inputTokens[currency];
     });
-  // Object.keys(outputTokens).forEach(
-  //   (currency) => {
-  //     if (currency === "ADA")
-  //       totalTokens[currency] = (totalTokens[currency] ?? 0) + outputTokens[currency];
-  //   });
 
   const sendTokens = Object.keys(totalTokens)
     .filter(
@@ -77,7 +67,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -93,10 +85,16 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
   );
 
   // filter out ADA to differentiate with send_ada
-  const currencies = Object.keys(assets).filter((currency) => currency !== "ADA" && assets[currency]);
+  const currencies = Object.keys(assets).filter(
+    (currency) =>
+      currency !== "ADA" && assets[currency]
+  );
   if (!currencies.length) return [0, assets];
 
-  const negativesCount = currencies.filter((currency) => assets[currency] < 0).length;
+  const negativesCount = currencies.filter(
+    (currency) =>
+      assets[currency] < 0
+  ).length;
   return [weighting.userAccounts * negativesCount / currencies.length, assets];
 }
 
@@ -105,7 +103,9 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const assets = other.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -123,7 +123,10 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<Record<string, 
   const amounts = Object.values(assets);
   if (!amounts.length) return [0, assets];
 
-  const positivesCount = amounts.filter((amount) => amount > 0).length;
+  const positivesCount = amounts.filter(
+    (amount) =>
+      amount > 0
+  ).length;
   return [amounts.length > 1 // to differentiate with send_ada
     ? weighting.otherAccounts * positivesCount / amounts.length
     : 0, assets];
@@ -134,6 +137,8 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<Record<string, 
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

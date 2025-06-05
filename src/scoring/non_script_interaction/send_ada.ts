@@ -5,13 +5,14 @@ import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
 import { CalculatedScore, TransactionScore } from "../../types/_";
+import { util } from "../../util/_";
 
 // user.total.length === 1 (currency:ADA,amount:-#.##)
 // other.role are Unknown Addresses
 // no metadata
 const weighting = {
-  userAccounts: .80,
-  otherAccounts: .15,
+  userAccounts: .75,
+  otherAccounts: .20,
   metadata: .05,
 };
 
@@ -29,23 +30,32 @@ export async function score(
   ]);
 
   const [, amount] = weights[0];
-  const description = `Sent ${amount - network_fee.amount} ADA`;
+  const description = `Sent ${util.formatAmount(
+    amount - network_fee.amount,
+    "ADA",
+  )}`;
   const type = "send_ada";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2)
   );
 
   return { type, description, score };
 }
 
 /**
- * There may be more than 1 associated addresses, but the aggregate currency should only be ADA.
+ * There may be more than 1 associated addresses,
+ * but the aggregate currency should only be ADA.
+ * 
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<number>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<number>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -63,19 +73,29 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<number>> {
   const currencies = Object.keys(assets);
   if (!currencies.length || assets.ADA > 0) return [0, assets.ADA];
 
-  const adaCount = currencies.filter((currency) => currency === "ADA").length;
+  const adaCount = currencies.filter(
+    (currency) =>
+      currency === "ADA"
+  ).length;
   return [weighting.userAccounts * adaCount / currencies.length, -assets.ADA];
 }
 
 /**
- * Unknown Address count / other accounts length, if there's no other account then score:0
+ * Unknown Address count / other accounts length,
+ * if there's no other account then score:0
+ * 
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   if (!other.length) return [0, undefined];
 
-  const nonScriptAddressCount = other.filter(({ role }) => role === "Unknown Address").length;
+  const nonScriptAddressCount = other.filter(
+    ({ role }) =>
+      role === "Unknown Address"
+  ).length;
   return [weighting.otherAccounts * nonScriptAddressCount / other.length, undefined];
 }
 
@@ -84,6 +104,8 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

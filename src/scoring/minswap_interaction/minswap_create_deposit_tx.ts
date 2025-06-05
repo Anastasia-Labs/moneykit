@@ -7,8 +7,11 @@ import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/block
 import { CalculatedScore, TransactionScore } from "../../types/_";
 import { lucid, util } from "../../util/_";
 
-// user script address with positive amounts and non-script address with negative amounts
-// metadata { label:"674", json_metadata:{ msg:"Minswap: Deposit Order" } }
+// user accounts with:
+// - positive amounts script address
+// - negative amounts non-script address
+//
+// metadata: { label:"674", json_metadata:{ msg:"Minswap: Deposit Order" } }
 const weighting = {
   userAccounts: .75,
   metadata: .25,
@@ -31,7 +34,9 @@ export async function score(
   const description = depositCurrencies.length
     ? `Created a deposit request of ${util.joinWords(depositCurrencies)} on Minswap`
     : "Created a deposit request on Minswap";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -48,14 +53,18 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<string[]>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<string[]>
+> {
   const scriptTotal: Record<string, number> = {};
   const nonScriptTotal: Record<string, number> = {};
 
   for (const account of user) {
     try {
-      const { paymentCredential, stakeCredential } = await lucid.getAddressDetails(account.address);
-      if (paymentCredential?.type === "Script" || stakeCredential?.type === "Script") {
+      const { paymentCredential, stakeCredential } =
+        await lucid.getAddressDetails(account.address);
+      if (paymentCredential?.type === "Script" ||
+        stakeCredential?.type === "Script") {
         for (const { currency, amount } of account.total) {
           const maybeLP = currency.endsWith(" LP");
           if (maybeLP || amount < 0) continue; // skip LP Tokens or negative amounts
@@ -73,11 +82,13 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<string[]>> {
     }
   }
 
-  const depositCurrencies = Object.keys(scriptTotal);
-  const scriptTotalLength = depositCurrencies.length;
+  const scriptTotalLength = Object.keys(scriptTotal).length;
   const nonScriptTotalLength = Object.keys(nonScriptTotal).length;
   if (scriptTotalLength > 2) delete scriptTotal.ADA;
-  return [scriptTotalLength && nonScriptTotalLength ? weighting.userAccounts : 0, depositCurrencies];
+  return [
+    scriptTotalLength && nonScriptTotalLength ? weighting.userAccounts : 0,
+    Object.keys(scriptTotal),
+  ];
 }
 
 /**
@@ -85,6 +96,16 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<string[]>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap Deposit Order".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "Minswap Deposit Order".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }

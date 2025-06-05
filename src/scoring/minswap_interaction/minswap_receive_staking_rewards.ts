@@ -1,5 +1,7 @@
 // type: PASSTHROUGH | amm_dex
-// description: Received {#.## TokenA | and #.## TokenB} as staking rewards from Minswap
+//
+// description:
+// Received {#.## TokenA | and #.## TokenB} as staking rewards from Minswap
 
 import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
@@ -10,8 +12,8 @@ import { util } from "../../util/_";
 // user accounts to construct the received tokens
 // metadata { label:"674", json_metadata:{ msg:"Minswap: ... staking rewards" } }
 const weighting = {
-  userAccounts: .10,
-  metadata: .90,
+  userAccounts: .25,
+  metadata: .75,
 };
 
 export async function score(
@@ -37,7 +39,9 @@ export async function score(
   const description = currencies.length
     ? `Received ${util.joinWords(receivedTokens)} as staking rewards from Minswap`
     : "Received staking rewards from Minswap";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -52,7 +56,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, number>>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<Record<string, number>>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -74,6 +80,16 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<Record<string, n
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap staking rewards".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "Minswap staking rewards".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }

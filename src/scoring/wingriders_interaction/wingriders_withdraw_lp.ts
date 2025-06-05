@@ -49,7 +49,11 @@ export async function score(
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(other: Account[]): Promise<CalculatedScore<string[]>> {
+async function calcW1(other: Account[]): Promise<
+  CalculatedScore<string[]>
+> {
+  if (!other.length) return [0, []];
+
   const assets = other.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -70,10 +74,12 @@ async function calcW1(other: Account[]): Promise<CalculatedScore<string[]>> {
       assets[currency] > 0 && currency.startsWith("WR-LPT")
   ).map(
     (currency) =>
-      `${assets[currency]} ${currency
-        .replace("WR-LPT-", "")
-        .replaceAll("/", "-")
-      }`
+      `${util.formatAmount(
+        assets[currency],
+        currency
+          .replace("WR-LPT-", "")
+          .replaceAll("/", "-"),
+      )}`
   );
 
   return [weighting.otherAccounts * other.filter(
@@ -87,10 +93,12 @@ async function calcW1(other: Account[]): Promise<CalculatedScore<string[]>> {
 
 /**
  * No withdrawal if ran through Wingriders UI
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
-async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
+async function calcW2(withdrawal?: Asset): Promise<
+  CalculatedScore<undefined>
+> {
   return [withdrawal ? 0 : weighting.withdrawal, undefined];
 }
 
@@ -99,6 +107,8 @@ async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

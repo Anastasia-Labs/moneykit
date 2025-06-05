@@ -34,7 +34,9 @@ export async function score(
   const description = harvestedTokens?.length
     ? `Harvested ${util.joinWords(harvestedTokens)} from Wingriders`
     : intermediaryTx.description;
-  const type = harvestedTokens?.length ? "yield_farming" : intermediaryTx.type;
+  const type = harvestedTokens?.length
+    ? "yield_farming"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -49,7 +51,9 @@ export async function score(
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(other: Account[]): Promise<CalculatedScore<string[] | undefined>> {
+async function calcW1(other: Account[]): Promise<
+  CalculatedScore<string[] | undefined>
+> {
   const assets = other.reduce(
     (sum, { role, total }) => {
       if (role.startsWith("Wingriders Farm"))
@@ -76,12 +80,15 @@ async function calcW1(other: Account[]): Promise<CalculatedScore<string[] | unde
       util.formatAmount(assets[currency], currency),
   );
 
-  return [weighting.otherAccounts * harvestedTokens.length / currencies.length, harvestedTokens];
+  return [
+    weighting.otherAccounts * harvestedTokens.length / currencies.length,
+    harvestedTokens,
+  ];
 }
 
 /**
  * No withdrawal if ran through Wingriders UI
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
 async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
@@ -93,6 +100,8 @@ async function calcW2(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

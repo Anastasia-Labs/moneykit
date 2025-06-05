@@ -1,5 +1,5 @@
 // type: PASSTHROUGH | amm_dex
-// description: Created a liquidity removal / XXX-YYY withdraw order on Wingriders
+// description: Created a liquidity removal order (withdraw XXX-YYY) on Wingriders
 
 import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
@@ -7,8 +7,8 @@ import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/block
 import { CalculatedScore, TransactionScore } from "../../types/_";
 import { util } from "../../util/_";
 
-// user.total 2 currencies, ADA and LPT, with negative amounts
-// other.role is a Wingriders Address with 2 currencies, ADA and LPT, with positive amounts
+// user.total with ADA and negative LPT
+// other.role is a Wingriders Addr with ADA and positive LPT
 // metadata { label:"674", json_metadata:{ msg:"WingRiders: ... Liquidity" } }
 const weighting = {
   userAccounts: .40,
@@ -34,7 +34,9 @@ export async function score(
   const description = pairTokens
     ? `Created a liquidity removal order (withdraw ${pairTokens}) on Wingriders`
     : "Created a liquidity removal order on Wingriders";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -45,11 +47,13 @@ export async function score(
 }
 
 /**
- * The user must pay ADA and Some LP, with negative amounts.
+ * The user must pay ADA and negative LP
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<string | undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<string | undefined>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -69,29 +73,36 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<string | undefin
 
   const pairCount = currencies.filter(
     (currency) =>
-      (currency.includes("-LPT-") && assets[currency] < 0) // LPT must be negative
+      // LPT must be negative:
+      (currency.includes("-LPT-") && assets[currency] < 0)
       || currency === "ADA"
   ).length;
 
   const pairTokens = currencies.find(
     (currency) => {
-      return currency.startsWith("WR-LPT") && assets[currency] < 0; // find negative WR-LPT
+      // find negative WR-LPT:
+      return currency.startsWith("WR-LPT") && assets[currency] < 0;
     });
 
   return [
     weighting.userAccounts * pairCount / currencies.length,
-    pairTokens?.replace("WR-LPT-", "").replaceAll("/", "-"),
+    pairTokens?.replace("WR-LPT-", "")
+      .replaceAll("/", "-"),
   ];
 }
 
 /**
- * Wingriders address with ADA and LPT, with positive amounts / other accounts length,
- * if there's no other account then score:0
+ * Wingriders address with ADA and positive LPT,
+ * divided by other accounts length.
+ * 
+ * If there's no other account then score:0
  * 
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   if (!other.length) return [0, undefined];
 
   let depositLptAddressCount = 0;
@@ -106,7 +117,10 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
       );
     if (wingridersScriptAddress) depositLptAddressCount += 1;
   }
-  return [weighting.otherAccounts * depositLptAddressCount / other.length, undefined];
+  return [
+    weighting.otherAccounts * depositLptAddressCount / other.length,
+    undefined,
+  ];
 }
 
 /**
@@ -114,6 +128,16 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "WingRiders liquidity".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "WingRiders liquidity".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }
