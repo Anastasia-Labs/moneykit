@@ -7,8 +7,11 @@ import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/block
 import { CalculatedScore, TransactionScore } from "../../types/_";
 import { lucid, util } from "../../util/_";
 
-// user script address with positive amounts and non-script address with negative amounts
-// metadata { label:"674", json_metadata:{ msg:"Minswap: Market Order" } }
+// user accounts with:
+// - positive amounts script address
+// - negative amounts non-script address
+//
+// metadata: { label:"674", json_metadata:{ msg:"Minswap: Market Order" } }
 const weighting = {
   userAccounts: .75,
   metadata: .25,
@@ -27,7 +30,9 @@ export async function score(
   ]);
 
   const description = "Created a swap transaction on Minswap";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -44,14 +49,18 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   const scriptTotal: Record<string, number> = {};
   const nonScriptTotal: Record<string, number> = {};
 
   for (const account of user) {
     try {
-      const { paymentCredential, stakeCredential } = await lucid.getAddressDetails(account.address);
-      if (paymentCredential?.type === "Script" || stakeCredential?.type === "Script") {
+      const { paymentCredential, stakeCredential } =
+        await lucid.getAddressDetails(account.address);
+      if (paymentCredential?.type === "Script" ||
+        stakeCredential?.type === "Script") {
         for (const { currency, amount } of account.total) {
           const maybeLP = currency.endsWith(" LP");
           if (maybeLP || amount < 0) continue; // skip LP Tokens or negative amounts
@@ -69,7 +78,12 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
     }
   }
 
-  return [Object.keys(scriptTotal).length && Object.keys(nonScriptTotal).length ? weighting.userAccounts : 0, undefined];
+  return [
+    Object.keys(scriptTotal).length && Object.keys(nonScriptTotal).length
+      ? weighting.userAccounts
+      : 0,
+    undefined,
+  ];
 }
 
 /**
@@ -77,6 +91,16 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap Market Order".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "Minswap Market Order".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }

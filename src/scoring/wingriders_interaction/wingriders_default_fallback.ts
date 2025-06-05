@@ -27,7 +27,9 @@ export async function score(
   ]);
 
   const description = "Executed an order on Wingriders";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
   const score = weights.reduce(
     (sum, [weight]) => sum + weight,
@@ -42,7 +44,9 @@ export async function score(
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   if (!other.length) return [0, undefined];
 
   const hasWingriders = other.find(
@@ -65,6 +69,12 @@ async function calcW1(other: Account[]): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", ["WingRiders"], metadata) * weighting.metadata, undefined];
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg("674", ["WingRiders"], metadata),
+    undefined,
+  ];
 }

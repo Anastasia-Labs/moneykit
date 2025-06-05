@@ -9,13 +9,12 @@ import { lucid } from "../../util/_";
 
 // output 5 ADA to user own account
 // user.total == network_fee
-// no other.role or all are user own PKH
+// no other account
 // no metadata
 const weighting = {
   output5ada: .50,
-  userAccounts: .20,
-  otherAccounts: .20,
-  metadata: .10,
+  userAccounts: .45,
+  metadata: .05,
 };
 
 export async function score(
@@ -28,8 +27,7 @@ export async function score(
   const weights = await Promise.all([
     calcW0(txUTXOs, lucidAddressDetails),
     calcW1(accounts.user, network_fee),
-    calcW2(accounts.other, lucidAddressDetails),
-    calcW3(metadata),
+    calcW2(metadata),
   ]);
 
   const description = "Setup Collateral";
@@ -52,15 +50,21 @@ export async function score(
 async function calcW0(
   txUTXOs: TransactionUTXOs,
   lucidAddressDetails: AddressDetails,
-): Promise<CalculatedScore<undefined>> {
+): Promise<
+  CalculatedScore<undefined>
+> {
   for (const { address, amount } of txUTXOs.outputs) {
     try {
       const pk = await lucid.paymentCredentialOf(address);
       const sk = await lucid.stakeCredentialOf(address);
-      if (pk?.hash !== lucidAddressDetails.paymentCredential?.hash && sk?.hash !== lucidAddressDetails.stakeCredential?.hash) continue;
+      if (
+        pk?.hash !== lucidAddressDetails.paymentCredential?.hash &&
+        sk?.hash !== lucidAddressDetails.stakeCredential?.hash
+      ) continue;
 
       for (const { unit, quantity } of amount) {
-        if (unit === "lovelace" && quantity === "5000000") return [weighting.output5ada, undefined];
+        if (unit === "lovelace" && quantity === "5000000")
+          return [weighting.output5ada, undefined];
       }
     } catch {
       continue;
@@ -70,7 +74,7 @@ async function calcW0(
 }
 
 /**
- * Input amounts equals to network fee for single address wallets amd no stake rewards withdrawal.
+ * Input amounts equals to network fee for single address wallets.
  * @param user User Accounts
  * @param networkFee Network Fee
  * @returns [Score, AdditionalData]
@@ -78,7 +82,9 @@ async function calcW0(
 async function calcW1(
   user: Account[],
   networkFee: Asset,
-): Promise<CalculatedScore<undefined>> {
+): Promise<
+  CalculatedScore<undefined>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -97,27 +103,12 @@ async function calcW1(
 }
 
 /**
- * All output addresses must be user PKH.
- * @param other Other Accounts
- * @param lucidAddressDetails Lucid User AddressDetails
- * @returns [Score, AdditionalData]
- */
-async function calcW2(
-  other: Account[],
-  lucidAddressDetails: AddressDetails,
-): Promise<CalculatedScore<undefined>> {
-  for (const { address } of other) {
-    const pk = await lucid.paymentCredentialOf(address);
-    if (pk?.hash !== lucidAddressDetails.paymentCredential?.hash) return [0, undefined];
-  }
-  return [weighting.otherAccounts, undefined];
-}
-
-/**
  * The user can optionally put some arbitrary metadata though.
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

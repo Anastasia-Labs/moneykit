@@ -1,5 +1,5 @@
 // type: PASSTHROUGH | amm_dex
-// description: Withdrew #.## TokenA and #.## TokenB from XXX-YYY LP on Wingriders
+// description: Withdrew #.## TokenA and #.## TokenB from XXX-YYY pool on Wingriders
 
 import { Account, Asset, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
@@ -8,7 +8,10 @@ import { CalculatedScore, TransactionScore } from "../../types/_";
 import { util } from "../../util/_";
 
 // user.total 1 or more NonADA with positive amount
-// other.role there's a Wingriders Request address with negative LPT amount that points to an Unknown Script which contains the withdrawal amounts
+//
+// other.role there's a Wingriders Request address with negative LPT amount
+// that points to an Unknown Script which contains the withdrawal amounts
+//
 // no withdrawal
 // no metadata
 const weighting = {
@@ -48,15 +51,23 @@ export async function score(
         currency.includes("-LPT-")
     ).map(
       ({ currency }: Asset) =>
-        currency.replace("WR-LPT-", "").replaceAll("/", "-")
+        currency
+          .replace("WR-LPT-", "")
+          .replaceAll("/", "-")
     );
 
     const description = `Withdrew ${util.joinWords(tokens)} from ${util.joinWords(lps)} ${lps.length > 1 ? "pools" : "pool"} on Wingriders`;
-    const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+    const type = intermediaryTx.type === `${undefined}`
+      ? "amm_dex"
+      : intermediaryTx.type;
 
-    const score = weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
+    const score = parseFloat(
+      weights
+        .reduce(
+          (sum, [weight]) => sum + weight,
+          0,
+        )
+        .toFixed(2),
     );
 
     return { type, description, score };
@@ -75,7 +86,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   const assets = user.reduce(
     (sum, { total }) => {
       total.reduce(
@@ -98,11 +111,14 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
 }
 
 /**
- * There should be a Wingriders Request address with negative LPT amount that points to an Unknown Script which contains the withdrawal amounts.
+ * There should be a Wingriders Request address with negative LPT amount
+ * that points to an Unknown Script which contains the withdrawal amounts.
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<Asset[] | undefined>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<Asset[] | undefined>
+> {
   if (!other.length) return [0, undefined];
 
   let score = 0;
@@ -128,12 +144,15 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<Asset[] | undef
   );
   if (wingridersScriptAddress) score += 1;
 
-  return [weighting.otherAccounts * score / 3, wingridersScriptAddress?.total];
+  return [
+    weighting.otherAccounts * Math.min(score / 3, 1),
+    wingridersScriptAddress?.total,
+  ];
 }
 
 /**
  * The user will never withdraw as a the transaction is executed by some batchers.
- * @param withdrawal Whether is there some withdrawals associated with the user address
+ * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
 async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
@@ -145,6 +164,8 @@ async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW4(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW4(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [metadata.length ? 0 : weighting.metadata, undefined];
 }

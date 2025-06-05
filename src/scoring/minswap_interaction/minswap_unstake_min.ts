@@ -12,8 +12,8 @@ import { util } from "../../util/_";
 // metadata { label:"674", json_metadata:{ msg:"Minswap: Unstake MIN" } }
 const weighting = {
   userAccounts: .40,
-  otherAccounts: .10,
-  metadata: .50,
+  otherAccounts: .40,
+  metadata: .20,
 };
 
 export async function score(
@@ -32,13 +32,17 @@ export async function score(
   const [, minswap] = weights[0];
 
   const description = minswap > 0
-    ? `Unstaked ${minswap} MIN from Minswap`
+    ? `Unstaked ${util.formatAmount(minswap, "MIN")} from Minswap`
     : "Unstaked MIN from Minswap";
-  const type = intermediaryTx.type === `${undefined}` ? "amm_dex" : intermediaryTx.type;
+  const type = intermediaryTx.type === `${undefined}`
+    ? "amm_dex"
+    : intermediaryTx.type;
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
+  const score = parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2),
   );
 
   return { type, description, score };
@@ -49,7 +53,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<number>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<number>
+> {
   const minswap = user.reduce(
     (sum, { total }) =>
       total.reduce(
@@ -70,10 +76,13 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<number>> {
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [other.find(
     ({ role, total }) =>
-      role.toUpperCase().startsWith("MINSWAP MIN STAKING") && total.find(
+      role.toUpperCase().startsWith("MINSWAP MIN STAKING") &&
+      total.find(
         ({ currency, amount }) =>
           currency === "Minswap" && amount < 0
       )
@@ -85,6 +94,16 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
-  return [util.weighMetadataMsg("674", "Minswap Unstake MIN".split(" "), metadata) * weighting.metadata, undefined];
+async function calcW3(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
+  return [
+    weighting.metadata * util
+      .weighMetadataMsg(
+        "674",
+        "Minswap Unstake MIN".split(" "),
+        metadata,
+      ),
+    undefined,
+  ];
 }

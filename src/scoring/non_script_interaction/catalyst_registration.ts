@@ -40,7 +40,9 @@ export async function score(
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW1(metadata: Record<string, any>[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(metadata: Record<string, any>[]): Promise<
+  CalculatedScore<undefined>
+> {
   if (!metadata.length) return [0, undefined];
 
   return [weighting.metadata * metadata.filter(

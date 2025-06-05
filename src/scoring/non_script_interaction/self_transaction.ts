@@ -40,7 +40,9 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW1(user: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [user.length ? weighting.userAccounts : 0, undefined];
 }
 
@@ -49,6 +51,8 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<undefined>> {
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcW2(other: Account[]): Promise<
+  CalculatedScore<undefined>
+> {
   return [other.length ? 0 : weighting.otherAccounts, undefined];
 }
