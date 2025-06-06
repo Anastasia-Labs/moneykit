@@ -6,7 +6,7 @@
 import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, PoolMetadata, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
-import { bf, lucid } from "../../util/_";
+import { bf, lucid, util } from "../../util/_";
 import { CalculatedScore, TransactionScore } from "../../types/_";
 
 // txInfo.delegation_count > 0
@@ -48,12 +48,7 @@ export async function score(
     : "Stake Delegation";
   const type = "stake_delegation";
 
-  const score = parseFloat(
-    weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    ).toFixed(2)
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

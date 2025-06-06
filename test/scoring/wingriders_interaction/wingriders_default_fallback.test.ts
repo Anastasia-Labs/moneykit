@@ -133,12 +133,12 @@ describe("wingriders_default_fallback", () => {
     //#endregion
   });
 
-  it("score: .675", async () => {
+  it("score: .68", async () => {
     //#region Arrange
     const defaultFallbackScore: TransactionScore = {
       type: "amm_dex",
       description: "Executed an order on Wingriders",
-      score: .675,
+      score: .68,
     };
     //#endregion
 

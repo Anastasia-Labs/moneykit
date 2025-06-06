@@ -5,6 +5,7 @@ import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
 import { CalculatedScore, TransactionScore } from "../../types/_";
 import { Transaction } from "../../types/manifest";
+import { util } from "../../util/_";
 
 // Catalyst deregistration metadata
 const weighting = {
@@ -25,10 +26,7 @@ export async function score(
   const description = "Catalyst Deregistration";
   const type = "catalyst_deregistration";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

@@ -5,6 +5,7 @@ import { Account, Asset, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
 import { CalculatedScore, TransactionScore } from "../../types/_";
+import { util } from "../../util/_";
 
 // txInfo.stake_cert_count && !txInfo.delegation_count
 // user.total.length === 1 (currency:ADA,amount:-#.##)
@@ -37,12 +38,7 @@ export async function score(
   const description = "Stake Registration";
   const type = "stake_registration";
 
-  const score = parseFloat(
-    weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    ).toFixed(2)
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

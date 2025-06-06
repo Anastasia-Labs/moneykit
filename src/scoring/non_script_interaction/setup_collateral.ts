@@ -5,7 +5,7 @@ import { Account, Asset, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
 import { CalculatedScore, TransactionScore } from "../../types/_";
-import { lucid } from "../../util/_";
+import { lucid, util } from "../../util/_";
 
 // output 5 ADA to user own account
 // user.total == network_fee
@@ -33,10 +33,7 @@ export async function score(
   const description = "Setup Collateral";
   const type = "setup_collateral";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

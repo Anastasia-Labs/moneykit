@@ -33,10 +33,7 @@ export async function score(
     ? "amm_dex"
     : intermediaryTx.type;
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

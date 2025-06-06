@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bf, lucid, util } from "../../src/util/_";
-import { Amounts, ScDesc } from "../../src/types/_";
+import { Amounts, CalculatedScore, ScDesc } from "../../src/types/_";
 import { Account, Asset } from "../../src/types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AssetInfo } from "../../src/util/blockfrost";
@@ -346,6 +346,25 @@ describe.concurrent("util", () => {
     //#region Assert
     expect(hit).toBe(1);
     expect(miss).toBe(0);
+    //#endregion
+  });
+
+  it("sumWeights", async () => {
+    //#region Arrange
+    const weights: CalculatedScore<any>[] = [
+      [.10, undefined],
+      [.20, undefined],
+      [.30, undefined],
+      [.40, undefined],
+    ];
+    //#endregion
+
+    //#region Act
+    const score = util.sumWeights(weights);
+    //#endregion
+
+    //#region Assert
+    expect(score).toBe(1);
     //#endregion
   });
 });

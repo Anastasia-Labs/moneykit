@@ -54,10 +54,7 @@ export async function score(
   const description = `Sent ${util.joinWords(sendTokens)}`.trim();
   const type = "send_tokens";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }
