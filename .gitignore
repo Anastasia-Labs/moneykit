@@ -1,4 +1,7 @@
+.devcontainer/
 .direnv/
+.pnpm-store/
+.vscode/
 build/
 crfa-offchain-data-registry/
 
