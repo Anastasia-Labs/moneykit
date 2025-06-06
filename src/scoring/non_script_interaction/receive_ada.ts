@@ -36,12 +36,7 @@ export async function score(
   const description = `Received ${util.formatAmount(amount, "ADA")}`;
   const type = "receive_ada";
 
-  const score = parseFloat(
-    weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    ).toFixed(2)
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

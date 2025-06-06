@@ -36,10 +36,7 @@ export async function score(
     : "Withdrew LP Tokens from Wingriders";
   const type = lpTokens?.length ? "amm_dex" : intermediaryTx.type;
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

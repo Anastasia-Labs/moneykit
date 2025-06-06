@@ -3,7 +3,7 @@ export * as cache from "./cache";
 export * as logger from "./logger";
 export * as lucid from "./lucid";
 
-import { Amounts, ScDesc } from "../types/_";
+import { Amounts, CalculatedScore, ScDesc } from "../types/_";
 import { Account, Asset } from "../types/manifest";
 import * as bf from "./blockfrost";
 import * as lucid from "./lucid";
@@ -128,4 +128,11 @@ export const util = {
         )
     ).length / metadata.length;
   },
+
+  sumWeights: (weights: CalculatedScore<any>[]) => parseFloat(
+    weights.reduce(
+      (sum, [weight]) => sum + weight,
+      0,
+    ).toFixed(2)
+  ),
 };

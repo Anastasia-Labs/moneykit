@@ -5,6 +5,7 @@ import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
 import { CalculatedScore, TransactionScore } from "../../types/_";
+import { util } from "../../util/_";
 
 // txInfo.delegation_count > 1
 // user.total currency:ADA amount:-#.##
@@ -34,12 +35,7 @@ export async function score(
   const description = "Delegated stake to multiple pools";
   const type = "multi_stake_delegation";
 
-  const score = parseFloat(
-    weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    ).toFixed(2),
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

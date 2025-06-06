@@ -5,6 +5,7 @@ import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
 import { AddressInfo, TransactionInfo, TransactionUTXOs } from "../../util/blockfrost";
 import { CalculatedScore, TransactionScore } from "../../types/_";
+import { util } from "../../util/_";
 
 // user.total.length
 // other.role.length === 0
@@ -27,10 +28,7 @@ export async function score(
   const description = "Self Transaction";
   const type = "self_transaction";
 
-  const score = weights.reduce(
-    (sum, [weight]) => sum + weight,
-    0,
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

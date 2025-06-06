@@ -64,12 +64,7 @@ export async function score(
       ? "amm_dex"
       : intermediaryTx.type;
 
-    const score = parseFloat(
-      weights.reduce(
-        (sum, [weight]) => sum + weight,
-        0,
-      ).toFixed(2),
-    ) / divider;
+    const score = util.sumWeights(weights) / divider;
 
     return { type, description, score };
   } else {
