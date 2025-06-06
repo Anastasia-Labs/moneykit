@@ -37,12 +37,7 @@ export async function score(
     : "liquidity order"} on Minswap`;
   const type = qty && farm ? "yield_farming" : intermediaryTx.type;
 
-  const score = parseFloat(
-    weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    ).toFixed(2),
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

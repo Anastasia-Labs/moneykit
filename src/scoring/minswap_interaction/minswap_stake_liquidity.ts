@@ -34,12 +34,7 @@ export async function score(
   const description = `Staked ${tokenName || "liquidity"} on Minswap`;
   const type = tokenName ? "yield_farming" : intermediaryTx.type;
 
-  const score = parseFloat(
-    weights.reduce(
-      (sum, [weight]) => sum + weight,
-      0,
-    ).toFixed(2),
-  );
+  const score = util.sumWeights(weights);
 
   return { type, description, score };
 }

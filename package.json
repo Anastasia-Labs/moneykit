@@ -11,8 +11,8 @@
     "build": "pnpm crfa && tsc --outDir build",
     "pm2": "pnpm build && pm2-runtime start build/index.js --env production 2>/dev/null",
     "node": "ts-node src/index.ts",
-    "lint": "redocly lint ./openapi.yaml --format stylish",
-    "build-docs": "pnpm lint && redocly build-docs ./openapi.yaml -o ./docs/index.html"
+    "lint-docs": "redocly lint ./openapi.yaml --format stylish",
+    "build-docs": "pnpm lint-docs && redocly build-docs ./openapi.yaml -o ./docs/index.html"
   },
   "author": "Ariady Putra",
   "license": "MIT",
