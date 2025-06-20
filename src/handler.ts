@@ -1,14 +1,30 @@
-import { Request, Response } from "express";
-import * as svc from "./svc/_";
-import { logger } from "./util/_";
+import type { Request, Response } from "express";
+
+import { Effect } from "effect";
+import { NodeContext } from "@effect/platform-node";
+
+import { Describer, DescriberLayerLive, DistinctCategoriesLive, DistinctProjectsLive } from "./Transaction/Describer";
+
+import { CacheLive } from "./Service/Cache";
+import { Logger } from "./Service/Logger";
 
 export async function getDescriberStats(req: Request, rsp: Response) {
   try {
-    const stats = await svc.describer
-      .getStats();
+    const stats =
+      await Effect.runPromise(
+        Describer.getStats()
+          .pipe(
+            Effect.provide(DescriberLayerLive),
+            Effect.provide(DistinctProjectsLive),
+            Effect.provide(DistinctCategoriesLive),
+            Effect.provide(NodeContext.layer),
+          )
+      );
     rsp.json(stats);
-  } catch (error) {
-    _respondError(req, rsp, error);
+  } catch (exception) {
+    const error = JSON.stringify(exception);
+    const failure = JSON.parse(error).cause?.failure;
+    _respondError(req, rsp, failure ?? exception);
   }
 }
 
@@ -32,22 +48,33 @@ export async function describeAddressTransactions(req: Request, rsp: Response) {
       message: "Maximum count is 10 transactions per request.",
     };
 
-    const descriptions = await svc.describer
-      .describeAddressTransactions(
-        req.params.address,
-        count,
+    const descriptions =
+      await Effect.runPromise(
+        Describer.describeAddressTransactions(
+          req.params.address,
+          count,
+        ).pipe(
+          Effect.provide(DescriberLayerLive),
+          Effect.provide(DistinctProjectsLive),
+          Effect.provide(DistinctCategoriesLive),
+          // Effect.provide(BfApiLive),
+          Effect.provide(CacheLive),
+          Effect.provide(NodeContext.layer),
+        )
       );
     rsp.json(descriptions);
 
     const rspTime = new Date().getTime();
 
-    _log(ip,                                                 // client identifier:
-      { path: req.path, time: reqTime },                     // request path and time,
-      { body: JSON.stringify(descriptions), time: rspTime }, // response body and time,
-      { uuid: descriptions.id, time: rspTime - reqTime },    // process uuid and duration
+    _log(ip, // client identifier
+      { path: req.path, time: reqTime }, // req path and time
+      { body: JSON.stringify(descriptions), time: rspTime }, // resp body and time
+      { uuid: descriptions.id, time: rspTime - reqTime }, // proc uuid and duration
     );
-  } catch (error) {
-    _respondError(req, rsp, error);
+  } catch (exception) {
+    const error = JSON.stringify(exception);
+    const failure = JSON.parse(error).cause?.failure;
+    _respondError(req, rsp, failure ?? exception);
   }
 };
 
@@ -61,30 +88,43 @@ export async function describeSpecificAddressTransaction(req: Request, rsp: Resp
 
     const reqTime = new Date().getTime();
 
-    const description = await svc.describer
-      .describeSpecificAddressTransaction(
-        req.params.address,
-        req.params.hash,
+    const description =
+      await Effect.runPromise(
+        Describer.describeSpecificAddressTransaction(
+          req.params.address,
+          req.params.hash,
+        ).pipe(
+          Effect.provide(DescriberLayerLive),
+          Effect.provide(DistinctProjectsLive),
+          Effect.provide(DistinctCategoriesLive),
+          // Effect.provide(BfApiLive),
+          Effect.provide(CacheLive),
+          Effect.provide(NodeContext.layer),
+        )
       );
     rsp.json(description);
 
     const rspTime = new Date().getTime();
 
-    _log(ip,                                                // client identifier:
-      { path: req.path, time: reqTime },                    // request path and time,
-      { body: JSON.stringify(description), time: rspTime }, // response body and time,
-      { uuid: description.id, time: rspTime - reqTime },    // process uuid and duration
+    _log(ip, // client identifier
+      { path: req.path, time: reqTime }, // req path and time
+      { body: JSON.stringify(description), time: rspTime }, // resp body and time
+      { uuid: description.id, time: rspTime - reqTime }, // proc uuid and duration
     );
-  } catch (error) {
-    _respondError(req, rsp, error);
+  } catch (exception) {
+    const error = JSON.stringify(exception);
+    const failure = JSON.parse(error).cause?.failure;
+    _respondError(req, rsp, failure ?? exception);
   }
 };
 
-function _log(client: string,
+function _log(
+  client: string,
   request: { path: string, time: number; },
   response: { body: string, time: number; },
-  process: { uuid: string, time: number; }) {
-  logger.log.info({ client, request, response, process });
+  process: { uuid: string, time: number; },
+) {
+  Logger.log.info({ client, request, response, process });
 }
 
 function _logError(
@@ -93,10 +133,15 @@ function _logError(
   time: number,
   error: any,
 ) {
-  logger.log.error({ client, path, time, error });
+  Logger.log.error({ client, path, time, error });
 }
 
-function _respondError(request: Request, response: Response, error: any, status: number = 500) {
+function _respondError(
+  request: Request,
+  response: Response,
+  error: any,
+  status: number = 500,
+) {
   const { ip, path } = request;
   const time = new Date().getTime();
 
