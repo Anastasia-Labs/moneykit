@@ -34,17 +34,15 @@ export const BfApiLive = Layer.effect(
     const API = new BlockFrostAPI({ projectId });
     return API;
   }).pipe(
-    Effect.catchTags({
-      ConfigError:
-        ({ _op, _tag }) =>
-          Effect.fail(
-            new BfError({
-              status_code: 500,
-              error: _tag,
-              message: _op,
-            })
-          )
-    })
+    Effect.catchAllCause(
+      (cause) =>
+        Effect.gen(function* () {
+          const { failure }: any = cause.toJSON();
+          return yield* Effect.fail(
+            new BfError({ ...failure })
+          );
+        })
+    )
   ),
 );
 
@@ -91,19 +89,26 @@ export const Blockfrost = {
         cache.set<AddressInfo>(key, addressInfo, 60);
         return addressInfo;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getAddressTransactions:
@@ -125,19 +130,26 @@ export const Blockfrost = {
         cache.set<AddressTransactions>(key, addressTransactions, 60);
         return addressTransactions;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getTransactionInfo:
@@ -159,19 +171,26 @@ export const Blockfrost = {
         cache.set<TransactionInfo>(key, transactionInfo, 60_000);
         return transactionInfo;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getTransactionUTXOs:
@@ -193,19 +212,26 @@ export const Blockfrost = {
         cache.set<TransactionUTXOs>(key, transactionUTXOs, 60_000);
         return transactionUTXOs;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getTransactionMetadata:
@@ -227,19 +253,26 @@ export const Blockfrost = {
         cache.set<TransactionMetadata>(key, transactionMetadata, 60_000);
         return transactionMetadata;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getTransactionDelegations:
@@ -261,19 +294,26 @@ export const Blockfrost = {
         cache.set<TransactionDelegations>(key, transactionDelegations, 60_000);
         return transactionDelegations;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getTransactionWithdrawals:
@@ -295,19 +335,26 @@ export const Blockfrost = {
         cache.set<TransactionWithdrawals>(key, transactionWithdrawals, 60_000);
         return transactionWithdrawals;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getAssetInfo:
@@ -329,19 +376,26 @@ export const Blockfrost = {
         cache.set<AssetInfo>(key, assetInfo, 60);
         return assetInfo;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getDatum:
@@ -363,19 +417,26 @@ export const Blockfrost = {
         cache.set<ScriptDatum>(key, datum, 60_000);
         return datum;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 
   getPoolMetadata:
@@ -397,18 +458,25 @@ export const Blockfrost = {
         cache.set<PoolMetadata>(key, poolMetadata, 60);
         return poolMetadata;
       }).pipe(
-        Effect.catchTags({
-          UnknownException:
-            (exception) => {
-              const cause = JSON.stringify(exception.cause);
-              const [error, message] = `${exception.error}`.split(": ");
-              return Effect.fail(
-                new BfError({
-                  ...JSON.parse(cause),
-                  error, message,
-                })
-              );
-            }
-        })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              const errorMessage = `${failure.cause}`;
+              if (errorMessage.indexOf(": ") > 0) {
+                const [error, message] = errorMessage.split(": ");
+                return yield* Effect.fail(
+                  new BfError({
+                    ...eval(failure).cause,
+                    error, message,
+                  })
+                );
+              } else {
+                return yield* Effect.fail(
+                  new BfError({ ...failure })
+                );
+              }
+            })
+        )
       ),
 };

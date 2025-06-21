@@ -107,27 +107,15 @@ export const DescriberLayerLive = Layer.effect(
 
     return { scDesc, distinctProjects, distinctCategories, stats };
   }).pipe(
-    Effect.catchTags({
-      BadArgument:
-        (error) =>
-          Effect.fail(
-            new DescriberError({
-              status_code: 500,
-              error: error._tag,
-              message: `${error}`,
-            })
-          ),
-
-      SystemError:
-        (error) =>
-          Effect.fail(
-            new DescriberError({
-              status_code: 500,
-              error: error._tag,
-              message: `${error}`,
-            })
-          )
-    })
+    Effect.catchAllCause(
+      (cause) =>
+        Effect.gen(function* () {
+          const { failure }: any = cause.toJSON();
+          return yield* Effect.fail(
+            new DescriberError({ ...failure })
+          );
+        })
+    )
   ),
 );
 
@@ -147,11 +135,7 @@ export const DescriberLayerLive = Layer.effect(
 // );
 //#endregion
 
-export class DescriberError extends Data.TaggedError("DescriberError")<{
-  readonly status_code?: number,
-  readonly error?: string,
-  readonly message?: string,
-}> {}
+export class DescriberError extends Data.TaggedError("DescriberError")<typeof DescriberErrorSchema.Type> {}
 
 export const Describer = {
   getStats:
@@ -187,15 +171,15 @@ export const Describer = {
         return manifest;
       }).pipe(
         Effect.provide(BfApiLive),
-        Effect.catchTags({
-          BlockfrostError:
-            (exception) => {
-              const error = JSON.stringify(exception);
-              return Effect.fail(
-                new DescriberError({ ...JSON.parse(error) })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              return yield* Effect.fail(
+                new DescriberError({ ...failure })
               );
-            }
-        }),
+            })
+        ),
       ),
 
   describeSpecificAddressTransaction:
@@ -399,22 +383,15 @@ export const Describer = {
         return manifest;
       }).pipe(
         Effect.provide(BfApiLive),
-        Effect.catchTags({
-          BlockfrostError:
-            (exception) => {
-              const error = JSON.stringify(exception);
-              return Effect.fail(
-                new DescriberError({ ...JSON.parse(error) })
+        Effect.catchAllCause(
+          (cause) =>
+            Effect.gen(function* () {
+              const { failure }: any = cause.toJSON();
+              return yield* Effect.fail(
+                new DescriberError({ ...failure })
               );
-            },
-          LucidError:
-            (exception) => {
-              const error = JSON.stringify(exception);
-              return Effect.fail(
-                new DescriberError({ ...JSON.parse(error) })
-              );
-            },
-        }),
+            })
+        ),
       ),
 };
 
@@ -429,16 +406,3 @@ export class HttpApiDescriberError extends Schema.TaggedError<HttpApiDescriberEr
   DescriberErrorSchema,
   HttpApiSchema.annotations({ status: 500 }), // TODO: status from status_code
 ) {}
-
-// export class StatsService extends Effect.Service<StatsService>()(
-//   "StatsService",
-//   {
-//     effect: Describer.getStats(),
-//     dependencies: [
-//       DescriberLayerLive,
-//       DistinctProjectsLive,
-//       DistinctCategoriesLive,
-//       NodeContext.layer,
-//     ],
-//   },
-// ) {}

@@ -23,17 +23,15 @@ export const HttpDescriberLive = HttpApiBuilder.group(
             Effect.provide(DistinctCategoriesLive),
             Effect.provide(NodeContext.layer),
           ).pipe(
-            Effect.catchTags({
-              DescriberError:
-                (error) =>
-                  Effect.fail(
-                    new HttpApiDescriberError({
-                      status_code: error.status_code ?? 500,
-                      error: error._tag,
-                      message: `${error}`,
-                    })
-                  )
-            })
+            Effect.catchAllCause(
+              (cause) =>
+                Effect.gen(function* () {
+                  const { failure }: any = cause.toJSON();
+                  return yield* Effect.fail(
+                    new HttpApiDescriberError({ ...failure })
+                  );
+                })
+            )
           )
       )
 
@@ -48,17 +46,15 @@ export const HttpDescriberLive = HttpApiBuilder.group(
             Effect.provide(CacheLive),
             Effect.provide(NodeContext.layer),
           ).pipe(
-            Effect.catchTags({
-              DescriberError:
-                (error) =>
-                  Effect.fail(
-                    new HttpApiDescriberError({
-                      status_code: error.status_code ?? 500,
-                      error: error._tag,
-                      message: `${error}`,
-                    })
-                  )
-            })
+            Effect.catchAllCause(
+              (cause) =>
+                Effect.gen(function* () {
+                  const { failure }: any = cause.toJSON();
+                  return yield* Effect.fail(
+                    new HttpApiDescriberError({ ...failure })
+                  );
+                })
+            )
           )
       )
 
@@ -73,17 +69,15 @@ export const HttpDescriberLive = HttpApiBuilder.group(
             Effect.provide(CacheLive),
             Effect.provide(NodeContext.layer),
           ).pipe(
-            Effect.catchTags({
-              DescriberError:
-                (error) =>
-                  Effect.fail(
-                    new HttpApiDescriberError({
-                      status_code: error.status_code ?? 500,
-                      error: error._tag,
-                      message: `${error}`,
-                    })
-                  )
-            })
+            Effect.catchAllCause(
+              (cause) =>
+                Effect.gen(function* () {
+                  const { failure }: any = cause.toJSON();
+                  return yield* Effect.fail(
+                    new HttpApiDescriberError({ ...failure })
+                  );
+                })
+            )
           )
       )
 
