@@ -10,7 +10,12 @@ import * as openapi from "express-openapi";
 import * as yaml from "js-yaml";
 import * as file from "fs";
 
-import * as api from "./handler";
+import { Handler } from "./Handler";
+import { CacheLive } from "./Service/Cache";
+import { DescriberLayerLive, DistinctCategoriesLive, DistinctProjectsLive } from "./Transaction/Describer";
+
+import { Effect } from "effect";
+import { NodeContext } from "@effect/platform-node";
 
 dotenv.config();
 
@@ -673,15 +678,46 @@ const expressOpenAPI: openapi.ExpressOpenAPIArgs = {
     v0_addresses: [
       burstLimit,
       dailyLimit,
-      api.describeAddressTransactions,
+      (req, rsp) =>
+        Effect.runFork(
+          Handler.describeAddressTransactions(req, rsp)
+            .pipe(
+              Effect.provide(DescriberLayerLive),
+              Effect.provide(DistinctProjectsLive),
+              Effect.provide(DistinctCategoriesLive),
+              // Effect.provide(BfApiLive),
+              Effect.provide(CacheLive),
+              Effect.provide(NodeContext.layer),
+            )
+        ),
     ],
     v0_addresses_txs: [
       burstLimit,
       dailyLimit,
-      api.describeSpecificAddressTransaction,
+      (req, rsp) =>
+        Effect.runFork(
+          Handler.describeSpecificAddressTransaction(req, rsp)
+            .pipe(
+              Effect.provide(DescriberLayerLive),
+              Effect.provide(DistinctProjectsLive),
+              Effect.provide(DistinctCategoriesLive),
+              // Effect.provide(BfApiLive),
+              Effect.provide(CacheLive),
+              Effect.provide(NodeContext.layer),
+            )
+        ),
     ],
     v0_stats: [
-      api.getDescriberStats,
+      (req, rsp) =>
+        Effect.runFork(
+          Handler.getDescriberStats(req, rsp)
+            .pipe(
+              Effect.provide(DescriberLayerLive),
+              Effect.provide(DistinctProjectsLive),
+              Effect.provide(DistinctCategoriesLive),
+              Effect.provide(NodeContext.layer),
+            )
+        ),
     ],
   },
 };
