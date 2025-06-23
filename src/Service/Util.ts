@@ -40,45 +40,44 @@ export const Util = {
 
   getTotalAmounts:
     (amounts: Amounts): Effect.Effect<Array<Asset>, never, Cache | BfAPI> =>
-      Effect.gen(function* () {
-        const currencies = Object.keys(amounts).filter(
-          (currency) =>
-            amounts[currency] !== 0n
-        );
+      Effect.all(
+        Object.keys(amounts)
+          .filter(
+            (currency) =>
+              amounts[currency] !== 0n
+          )
+          .map(
+            (currency) =>
+              Effect.gen(function* () {
+                const isLovelaceOrADA =
+                  yield* Util.isLovelaceOrADA(currency);
+                const fromUnit =
+                  isLovelaceOrADA
+                    ? ({ metadata: { name: currency, decimals: 6 } } as AssetInfo)
+                    : yield* Effect.match(
+                      Blockfrost.getAssetInfo(currency),
+                      {
+                        onSuccess:
+                          (info) =>
+                            info,
+                        onFailure:
+                          () =>
+                            ({ metadata: { name: currency, decimals: 0 } } as AssetInfo),
+                      },
+                    );
 
-        // IDK how to Promise.all with yield* so:
-        const assets: Array<Asset> = [];
-        for (const currency of currencies) {
-          const isLovelaceOrADA =
-            yield* Util.isLovelaceOrADA(currency);
-          const fromUnit =
-            isLovelaceOrADA
-              ? ({ metadata: { name: currency, decimals: 6 } } as AssetInfo)
-              : yield* Effect.match(
-                Blockfrost.getAssetInfo(currency),
-                {
-                  onSuccess:
-                    (info) =>
-                      info,
-                  onFailure:
-                    () =>
-                      ({ metadata: { name: currency, decimals: 0 } } as AssetInfo),
-                },
-              );
+                const decimals = fromUnit.metadata?.decimals ?? 0;
 
-          const decimals = fromUnit.metadata?.decimals ?? 0;
-
-          assets.push({
-            currency: `${fromUnit.metadata?.name
-              ?? fromUnit.onchain_metadata?.name
-              ?? fromUnit.fingerprint
-              ?? currency}`,
-            amount: yield* Util.convertAmountToNumber(amounts[currency], decimals),
-          });
-        }
-
-        return assets;
-      }),
+                return {
+                  currency: `${fromUnit.metadata?.name
+                    ?? fromUnit.onchain_metadata?.name
+                    ?? fromUnit.fingerprint
+                    ?? currency}`,
+                  amount: yield* Util.convertAmountToNumber(amounts[currency], decimals),
+                };
+              })
+          )
+      ),
 
   convertAddressAmountsToAccounts:
     (
@@ -86,24 +85,21 @@ export const Util = {
       addressRole: string | undefined,
       lookup: ScDescLookup,
     ): Effect.Effect<Array<Account>, LucidError, Cache | BfAPI> =>
-      Effect.gen(function* () {
-        const addresses = Object.keys(addressAmounts);
-
-        // IDK how to Promise.all with yield* so:
-        const accounts: Array<Account> = [];
-        for (const address of addresses) {
-          accounts.push({
-            address,
-            role: addressRole
-              ?? lookup[address]?.role
-              ?? `Unknown ${(yield* Util.isKeyAddress(address))
-                ? "Address" : "Script"}`,
-            total: yield* Util.getTotalAmounts(addressAmounts[address]),
-          });
-        }
-
-        return accounts;
-      }),
+      Effect.all(
+        Object.keys(addressAmounts).map(
+          (address) =>
+            Effect.gen(function* () {
+              return {
+                address,
+                role: addressRole
+                  ?? lookup[address]?.role
+                  ?? `Unknown ${(yield* Util.isKeyAddress(address))
+                    ? "Address" : "Script"}`,
+                total: yield* Util.getTotalAmounts(addressAmounts[address]),
+              };
+            })
+        )
+      ),
 
   joinWords:
     (words: Array<string>): Effect.Effect<string> =>
