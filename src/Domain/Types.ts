@@ -1,10 +1,8 @@
-import type * as BF from "@blockfrost/openapi";
+import { Schema } from "effect";
 import type { AddressDetails } from "@lucid-evolution/lucid";
 
-import { Schema } from "effect";
-
 import type { Transaction } from "./Manifest";
-import type { AddressInfo } from "../Service/Blockfrost";
+import type { AddressInfo, TransactionInfo, TransactionUTXOs } from "../Service/Blockfrost";
 
 export class ScDescSchema extends Schema.Struct({
   name: Schema.String,
@@ -56,22 +54,23 @@ export type AddressAmounts = typeof AddressAmountsSchema.Type;
 
 //#region Scoring
 export type Score = number;
-export type CalculatedScore<AdditionalData> = [Score, AdditionalData];
+export type CalculatedScore<AdditionalData> =
+  readonly [Score, AdditionalData];
 export type TransactionScore = {
-  type: string;
-  description: string;
-  score: Score;
+  readonly type: string;
+  readonly description: string;
+  readonly score: Score;
 };
 
 export type ScoringFn = (
   intermediaryTx: Transaction,
-  bfAddressInfo: AddressInfo,
-  lucidAddressDetails: AddressDetails,
-  txInfo: BF.components["schemas"]["tx_content"],
-  txUTXOs: BF.components["schemas"]["tx_content_utxo"],
+  addressInfo: AddressInfo,
+  addressDetails: AddressDetails,
+  txInfo: TransactionInfo,
+  txUTXOs: TransactionUTXOs,
 ) => Promise<TransactionScore>;
 export type ScoringSvc = {
-  scoring: Array<ScoringFn>;
-  fallback: ScoringFn;
+  readonly scoring: Array<ScoringFn>;
+  readonly fallback: ScoringFn;
 };
 //#endregion
