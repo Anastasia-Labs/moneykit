@@ -1,8 +1,10 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { AddressDetails } from "@lucid-evolution/lucid";
 
 import type { Transaction } from "./Manifest";
-import type { AddressInfo, TransactionInfo, TransactionUTXOs } from "../Service/Blockfrost";
+
+import type { AddressInfo, BfAPI, BfError, TransactionInfo, TransactionUTXOs } from "../Service/Blockfrost";
+import { Cache } from "../Service/Cache";
 
 export class ScDescSchema extends Schema.Struct({
   name: Schema.String,
@@ -68,7 +70,7 @@ export type ScoringFn = (
   addressDetails: AddressDetails,
   txInfo: TransactionInfo,
   txUTXOs: TransactionUTXOs,
-) => Promise<TransactionScore>;
+) => Effect.Effect<TransactionScore, BfError, Cache | BfAPI>;
 export type ScoringSvc = {
   readonly scoring: Array<ScoringFn>;
   readonly fallback: ScoringFn;
