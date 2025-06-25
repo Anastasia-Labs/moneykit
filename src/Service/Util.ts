@@ -126,8 +126,8 @@ export const Util = {
   weighMetadataMsg:
     (
       label: string,
-      keywords: Array<string>,
-      metadata: Array<Record<string, any>>,
+      keywords: readonly string[],
+      metadata: readonly Record<string, any>[],
     ): Effect.Effect<number> => {
       if (!metadata.length) return Effect.succeed(0);
 

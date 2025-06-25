@@ -1,4 +1,5 @@
 import { ScoringFn } from "../Domain/Types";
+
 import { CatalystDeregistration } from "./NonScriptInteraction/CatalystDeregistration";
 import { CatalystRegistration } from "./NonScriptInteraction/CatalystRegistration";
 import { MultiStakeDelegation } from "./NonScriptInteraction/MultiStakeDelegation";
