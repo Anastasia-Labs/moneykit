@@ -83,7 +83,7 @@ const _calcUserAccountsWeight =
     const assets = user.reduce(
       (sum: Record<string, number>, { total }: Account) => {
         total.reduce(
-          (sum, { currency, amount }) => {
+          (sum: Record<string, number>, { currency, amount }) => {
             sum[currency] = (sum[currency] ?? 0) + amount;
             return sum;
           },
