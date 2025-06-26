@@ -1,4 +1,4 @@
-import { ScoringFn } from "../Domain/Types";
+import { ScoringSvc } from "../Domain/Types";
 
 import { CatalystDeregistration } from "./NonScriptInteraction/CatalystDeregistration";
 import { CatalystRegistration } from "./NonScriptInteraction/CatalystRegistration";
@@ -14,20 +14,20 @@ import { StakeRegistration } from "./NonScriptInteraction/StakeRegistration";
 import { TokenMinting } from "./NonScriptInteraction/TokenMinting";
 import { UnknownActivity } from "./NonScriptInteraction/UnknownActivity";
 
-export const Scoring: ScoringFn[] = [
-  ReceiveAda.score,
-  SendAda.score,
-  ReceiveToken.score,
-  SendToken.score,
-  TokenMinting.score,
-  CatalystRegistration.score,
-  CatalystDeregistration.score,
-  StakeRegistration.score,
-  StakeDelegation.score,
-  MultiStakeDelegation.score,
-  SetupCollateral.score,
-  // SelfTransaction.score,
-];
-
-export const Fallback: ScoringFn =
-  UnknownActivity.score;
+export const NonScriptInteraction: ScoringSvc = {
+  scoring: [
+    ReceiveAda.score,
+    SendAda.score,
+    ReceiveToken.score,
+    SendToken.score,
+    TokenMinting.score,
+    CatalystRegistration.score,
+    CatalystDeregistration.score,
+    StakeRegistration.score,
+    StakeDelegation.score,
+    MultiStakeDelegation.score,
+    SetupCollateral.score,
+    // SelfTransaction.score,
+  ],
+  fallback: UnknownActivity.score,
+};

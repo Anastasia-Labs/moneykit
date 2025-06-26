@@ -9,6 +9,7 @@ import type { TransactionMetadata, TransactionWithdrawals } from "../Service/Blo
 import { BfApiLive, BfError, Blockfrost } from "../Service/Blockfrost";
 import { Lucid } from "../Service/Lucid";
 import { Util } from "../Service/Util";
+import { Scoring } from "../Scoring/Scoring";
 
 const DAPPS_PATH = "./crfa-offchain-data-registry/dApps";
 
@@ -374,11 +375,21 @@ export const Describer = {
         };
         //#endregion
 
-        // TODO: Post-process the intermediary Transaction object
+        //#region Post-process TxObject
+        const highestConfidence =
+          yield* Scoring.calcConfidenceScoreOf(
+            transaction,
+            [...probableProjects],
+            addressInfo,
+            addressDetails,
+            tx,
+            utxos,
+          );
+        //#endregion
 
         const manifest: Manifest = {
           ...ManifestSchema.prototype.placeholder,
-          transactions: [transaction]
+          transactions: [highestConfidence]
         };
         return manifest;
       }).pipe(
