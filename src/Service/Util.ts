@@ -102,7 +102,7 @@ export const Util = {
       ),
 
   joinWords:
-    (words: Array<string>): Effect.Effect<string> =>
+    (words: readonly string[]): Effect.Effect<string> =>
       Effect.gen(function* () {
         if (words.length < 2) return words.join("");
         if (words.length === 2) return words.join(" and ");

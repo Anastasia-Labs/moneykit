@@ -74,7 +74,7 @@ const _calcUserAccountsWeight =
     );
 
     const currencies = Object.keys(assets);
-    if (!currencies.length || assets.ADA < 0) {
+    if (!currencies.length) {
       score = [0, undefined];
       return Effect.succeed(score);
     }
@@ -96,7 +96,7 @@ const _calcUserAccountsWeight =
       WEIGHTING.userAccounts * pairCount / currencies.length;
 
     const additionalData =
-      pairTokens?.replace("WR-LPT", "")
+      pairTokens?.replace("WR-LPT-", "")
         .replaceAll("/", "-");
 
     score = [weight, additionalData];

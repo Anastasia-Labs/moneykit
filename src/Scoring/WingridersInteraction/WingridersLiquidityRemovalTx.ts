@@ -62,7 +62,7 @@ export const WingridersLiquidityRemovalTx = {
               .map(
                 ({ currency }) =>
                   currency
-                    .replace("WR-LPT", "")
+                    .replace("WR-LPT-", "")
                     .replaceAll("/", "-")
               );
 
