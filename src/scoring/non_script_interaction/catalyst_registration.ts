@@ -20,7 +20,7 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW1(metadata),
+    calcMetadataWeight(metadata),
   ]);
 
   const description = "Catalyst Registration";
@@ -38,7 +38,7 @@ export async function score(
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW1(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   if (!metadata.length) return [0, undefined];

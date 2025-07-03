@@ -20,7 +20,7 @@ describe("minswap_create_swap_tx", () => {
     //#region Arrange
     const createSwapTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Minswap",
+      description: "Created a swap order on Minswap",
       score: 1,
     };
     //#endregion
@@ -100,7 +100,7 @@ describe("minswap_create_swap_tx", () => {
     //#region Arrange
     const createSwapTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Minswap",
+      description: "Created a swap order on Minswap",
       score: 1,
     };
     //#endregion
@@ -180,7 +180,7 @@ describe("minswap_create_swap_tx", () => {
     //#region Arrange
     const createSwapTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Minswap",
+      description: "Created a swap order on Minswap",
       score: 1,
     };
     //#endregion
@@ -277,7 +277,7 @@ describe("minswap_create_swap_tx", () => {
     //#region Arrange
     const createSwapTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Minswap",
+      description: "Created a swap order on Minswap",
       score: .25,
     };
     //#endregion

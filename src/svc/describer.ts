@@ -2,7 +2,7 @@ import * as file from "fs";
 import path from "path";
 import { Amounts, manifest, ScDesc } from "../types/_";
 import { Manifest, Transaction } from "../types/manifest";
-import { bf, lucid, util } from "../util/_";
+import { bf, logger, lucid, util } from "../util/_";
 import { scoring } from "../scoring/_";
 
 //#region Initialize Known Dapps
@@ -30,29 +30,34 @@ const distinctCategories: Set<string> = new Set([
 const scDesc: Record<string, ScDesc> = {};
 
 for (const dapp of dapps) {
-  const dappPath = path.join(dappsPath, dapp);
-  const dappFile = file.readFileSync(dappPath).toString();
+  try {
+    const dappPath = path.join(dappsPath, dapp);
+    const dappFile = file.readFileSync(dappPath).toString();
 
-  const { projectName, category, subCategory, scripts } = JSON.parse(dappFile);
+    const { projectName, category, subCategory, scripts } = JSON.parse(dappFile);
 
-  for (const { name, versions } of scripts) {
-    for (const { contractAddress } of versions) {
-      const tranType =
-        `${!subCategory || subCategory === '-' ? category : subCategory}`
-          .replaceAll(" ", "_")
-          .toLowerCase();
+    for (const { name, versions } of scripts) {
+      for (const { contractAddress } of versions) {
+        const tranType =
+          `${!subCategory || subCategory === '-' ? category : subCategory}`
+            .replaceAll(" ", "_")
+            .toLowerCase();
 
-      scDesc[contractAddress] = {
-        name,
-        projectName,
-        category: tranType === "dex" ? "other_dex" : tranType,
-        description: `${name ?? "Unknown activity"} on ${projectName}`,
-        role: `${name}`.startsWith(projectName) ? name : `${projectName} ${name ?? "Address"}`,
-      };
+        scDesc[contractAddress] = {
+          name,
+          projectName,
+          category: tranType === "dex" ? "other_dex" : tranType,
+          description: `${name ?? "Unknown activity"} on ${projectName}`,
+          role: `${name}`.startsWith(projectName) ? name : `${projectName} ${name ?? "Address"}`,
+        };
 
-      distinctProjects.add(scDesc[contractAddress].projectName);
-      distinctCategories.add(scDesc[contractAddress].category);
+        distinctProjects.add(scDesc[contractAddress].projectName);
+        distinctCategories.add(scDesc[contractAddress].category);
+      }
     }
+  } catch (error) {
+    logger.log.warn(`Skipped ${dapp} due to ${error}`);
+    continue;
   }
 }
 

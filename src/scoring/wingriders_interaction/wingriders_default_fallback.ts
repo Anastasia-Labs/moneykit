@@ -22,8 +22,8 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW1(intermediaryTx.accounts.other),
-    calcW2(intermediaryTx.metadata),
+    calcOtherAccountsWeight(intermediaryTx.accounts.other),
+    calcMetadataWeight(intermediaryTx.metadata),
   ]);
 
   const description = "Executed an order on Wingriders";
@@ -41,7 +41,7 @@ export async function score(
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(other: Account[]): Promise<
+async function calcOtherAccountsWeight(other: Account[]): Promise<
   CalculatedScore<undefined>
 > {
   if (!other.length) return [0, undefined];
@@ -66,7 +66,7 @@ async function calcW1(other: Account[]): Promise<
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   return [

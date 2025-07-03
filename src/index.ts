@@ -109,12 +109,12 @@ const expressOpenAPI: openapi.ExpressOpenAPIArgs = {
           {
             in: "query",
             name: "count",
-            description: "The number of transactions",
+            description: "The number of transactions. Min: 1; Max: 10; Default: 5",
             schema: {
               type: "integer",
-              minimum: 1,
-              maximum: 10,
-              default: 5,
+              // minimum: 1,
+              // maximum: 10,
+              // default: 5,
             },
             required: false,
           },

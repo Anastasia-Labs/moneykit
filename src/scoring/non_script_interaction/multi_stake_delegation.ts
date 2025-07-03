@@ -26,10 +26,10 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW0(txInfo, lucidAddressDetails.stakeCredential?.hash),
-    calcW1(accounts.user),
-    calcW2(accounts.other),
-    calcW3(metadata, txInfo),
+    calcStakeDelegationWeight(txInfo, lucidAddressDetails.stakeCredential?.hash),
+    calcUserAccountsWeight(accounts.user),
+    calcOtherAccountsWeight(accounts.other),
+    calcMetadataWeight(metadata, txInfo),
   ]);
 
   const description = "Delegated stake to multiple pools";
@@ -45,7 +45,7 @@ export async function score(
  * @param txInfo Blockfrost TxInfo
  * @param stakeAddress The User Bech32 StakeAddress
  */
-async function calcW0(
+async function calcStakeDelegationWeight(
   txInfo: TransactionInfo,
   stakeAddress?: string,
 ): Promise<CalculatedScore<undefined>> {
@@ -62,7 +62,7 @@ async function calcW0(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<
+async function calcUserAccountsWeight(user: Account[]): Promise<
   CalculatedScore<undefined>
 > {
   const assets = user.reduce(
@@ -100,7 +100,7 @@ async function calcW1(user: Account[]): Promise<
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
+async function calcOtherAccountsWeight(other: Account[]): Promise<CalculatedScore<undefined>> {
   return [other.length ? 0 : weighting.otherAccounts, undefined];
 }
 
@@ -110,7 +110,7 @@ async function calcW2(other: Account[]): Promise<CalculatedScore<undefined>> {
  * @param txInfo Blockfrost TxInfo
  * @returns [Score, AdditionalData]
  */
-async function calcW3(
+async function calcMetadataWeight(
   metadata: Record<string, any>[],
   txInfo: TransactionInfo,
 ): Promise<

@@ -20,7 +20,7 @@ describe("minswap_create_deposit_tx", () => {
     //#region Arrange
     const createDepositTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a deposit request of ADA and MIN on Minswap",
+      description: "Created a deposit order of ADA and MIN on Minswap",
       score: 1,
     };
     //#endregion
@@ -112,7 +112,7 @@ describe("minswap_create_deposit_tx", () => {
     //#region Arrange
     const createDepositTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a deposit request of ADA and MIN on Minswap",
+      description: "Created a deposit order of ADA and MIN on Minswap",
       score: 1,
     };
     //#endregion
@@ -204,7 +204,7 @@ describe("minswap_create_deposit_tx", () => {
     //#region Arrange
     const createDepositTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a deposit request of ADA and MIN on Minswap",
+      description: "Created a deposit order of ADA and MIN on Minswap",
       score: 1,
     };
     //#endregion
@@ -309,7 +309,7 @@ describe("minswap_create_deposit_tx", () => {
     //#region Arrange
     const createDepositTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a deposit request of MIN and ELEMENT on Minswap",
+      description: "Created a deposit order of MIN and ELEMENT on Minswap",
       score: 1,
     };
     //#endregion
@@ -409,7 +409,7 @@ describe("minswap_create_deposit_tx", () => {
     //#region Arrange
     const createDepositTxScore: TransactionScore = {
       type: "amm_dex",
-      description: "Created a deposit request on Minswap",
+      description: "Created a deposit order on Minswap",
       score: .25,
     };
     //#endregion

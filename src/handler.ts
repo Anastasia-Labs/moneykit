@@ -1,6 +1,6 @@
+import { logger } from "./util/_";
 import { Request, Response } from "express";
 import * as svc from "./svc/_";
-import { logger } from "./util/_";
 
 export async function getDescriberStats(req: Request, rsp: Response) {
   try {

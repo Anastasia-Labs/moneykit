@@ -25,9 +25,9 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW0(txUTXOs, lucidAddressDetails),
-    calcW1(accounts.user, network_fee),
-    calcW2(metadata),
+    calcOutput5AdaWeight(txUTXOs, lucidAddressDetails),
+    calcUserAccountsWeight(accounts.user, network_fee),
+    calcMetadataWeight(metadata),
   ]);
 
   const description = "Setup Collateral";
@@ -44,7 +44,7 @@ export async function score(
  * @param lucidAddressDetails Lucid User AddressDetails
  * @returns [Score, AdditionalData]
  */
-async function calcW0(
+async function calcOutput5AdaWeight(
   txUTXOs: TransactionUTXOs,
   lucidAddressDetails: AddressDetails,
 ): Promise<
@@ -76,7 +76,7 @@ async function calcW0(
  * @param networkFee Network Fee
  * @returns [Score, AdditionalData]
  */
-async function calcW1(
+async function calcUserAccountsWeight(
   user: Account[],
   networkFee: Asset,
 ): Promise<
@@ -104,7 +104,7 @@ async function calcW1(
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   return [metadata.length ? 0 : weighting.metadata, undefined];

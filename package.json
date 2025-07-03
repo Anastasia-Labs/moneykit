@@ -6,11 +6,11 @@
   "scripts": {
     "start": "pnpm pm2",
     "dev": "pnpm crfa && nodemon src/index.ts -w . -w .env -e ts,js,mjs,json,env",
-    "test": "vitest run --coverage",
+    "test": "pnpm crfa && vitest run --coverage",
     "crfa": "test -d ./crfa-offchain-data-registry/.git || git clone https://github.com/Cardano-Fans/crfa-offchain-data-registry.git && git -C ./crfa-offchain-data-registry/ pull",
     "build": "pnpm crfa && tsc --outDir build",
-    "pm2": "pnpm build && pm2-runtime start build/index.js --env production 2>/dev/null",
-    "node": "ts-node src/index.ts",
+    "pm2": "pnpm build && pm2-runtime start build/src/index.js --env production 2>/dev/null",
+    "node": "pnpm crfa && ts-node src/index.ts",
     "lint-docs": "redocly lint ./openapi.yaml --format stylish",
     "build-docs": "pnpm lint-docs && redocly build-docs ./openapi.yaml -o ./docs/index.html"
   },
@@ -29,7 +29,7 @@
     "winston": "3.17.0"
   },
   "devDependencies": {
-    "@redocly/cli": "1.34.3",
+    "@redocly/cli": "1.34.4",
     "@types/express": "5.0.1",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.14.1",

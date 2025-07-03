@@ -20,7 +20,7 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW1(accounts.user, txUTXOs),
+    calcTokenMintingWeight(accounts.user, txUTXOs),
   ]);
 
   const [, totalTokens] = weights[0];
@@ -56,7 +56,7 @@ export async function score(
  * @param txUTXOs Blockfrost TransactionUTXOs
  * @returns [Score, AdditionalData]
  */
-async function calcW1(
+async function calcTokenMintingWeight(
   user: Account[],
   txUTXOs: TransactionUTXOs,
 ): Promise<

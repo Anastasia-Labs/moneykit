@@ -26,10 +26,10 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW1(accounts.user),
-    calcW2(accounts.other),
-    calcW3(withdrawal_amount),
-    calcW4(metadata),
+    calcUserAccountsWeight(accounts.user),
+    calcOtherAccountsWeight(accounts.other),
+    calcWithdrawalWeight(withdrawal_amount),
+    calcMetadataWeight(metadata),
   ]);
 
   const totalTokens: Record<string, number> = {};
@@ -65,7 +65,7 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<
+async function calcUserAccountsWeight(user: Account[]): Promise<
   CalculatedScore<Record<string, number>>
 > {
   const assets = user.reduce(
@@ -99,7 +99,7 @@ async function calcW1(user: Account[]): Promise<
  * @param other Other Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW2(other: Account[]): Promise<
+async function calcOtherAccountsWeight(other: Account[]): Promise<
   CalculatedScore<Record<string, number>>
 > {
   const assets = other.reduce(
@@ -137,7 +137,7 @@ async function calcW2(other: Account[]): Promise<
  * @param withdrawal Whether there's some withdrawal associated with the user address
  * @returns [Score, AdditionalData]
  */
-async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
+async function calcWithdrawalWeight(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
   return [withdrawal ? 0 : weighting.withdrawal, undefined];
 }
 
@@ -146,7 +146,7 @@ async function calcW3(withdrawal?: Asset): Promise<CalculatedScore<undefined>> {
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW4(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   return [metadata.length ? 0 : weighting.metadata, undefined];

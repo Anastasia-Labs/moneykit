@@ -27,9 +27,9 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW0(txInfo, lucidAddressDetails.stakeCredential?.hash),
-    calcW1(accounts.user),
-    calcW2(metadata),
+    calcStakeDelegationWeight(txInfo, lucidAddressDetails.stakeCredential?.hash),
+    calcUserAccountsWeight(accounts.user),
+    calcMetadataWeight(metadata),
   ]);
 
   const [, poolMetadata] = weights[0];
@@ -58,7 +58,7 @@ export async function score(
  * @param txInfo Blockfrost TxInfo
  * @param stakeAddress The User Bech32 StakeAddress
  */
-async function calcW0(
+async function calcStakeDelegationWeight(
   txInfo: TransactionInfo,
   stakeAddress?: string,
 ): Promise<
@@ -93,7 +93,7 @@ async function calcW0(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<
+async function calcUserAccountsWeight(user: Account[]): Promise<
   CalculatedScore<undefined>
 > {
   const assets = user.reduce(
@@ -131,7 +131,7 @@ async function calcW1(user: Account[]): Promise<
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   return [metadata.length ? 0 : weighting.metadata, undefined];

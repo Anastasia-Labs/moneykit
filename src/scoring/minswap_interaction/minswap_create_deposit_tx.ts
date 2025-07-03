@@ -1,5 +1,5 @@
 // type: PASSTHROUGH | amm_dex
-// description: Created a deposit request of {TokenA | and TokenB} on Minswap
+// description: Created a deposit order of {TokenA | and TokenB} on Minswap
 
 import { Account, Transaction } from "../../types/manifest";
 import { AddressDetails } from "@lucid-evolution/lucid";
@@ -25,15 +25,15 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW1(intermediaryTx.accounts.user),
-    calcW2(intermediaryTx.metadata),
+    calcUserAccountsWeight(intermediaryTx.accounts.user),
+    calcMetadataWeight(intermediaryTx.metadata),
   ]);
 
   const [, depositCurrencies] = weights[0];
 
   const description = depositCurrencies.length
-    ? `Created a deposit request of ${util.joinWords(depositCurrencies)} on Minswap`
-    : "Created a deposit request on Minswap";
+    ? `Created a deposit order of ${util.joinWords(depositCurrencies)} on Minswap`
+    : "Created a deposit order on Minswap";
   const type = intermediaryTx.type === `${undefined}`
     ? "amm_dex"
     : intermediaryTx.type;
@@ -50,7 +50,7 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<
+async function calcUserAccountsWeight(user: Account[]): Promise<
   CalculatedScore<string[]>
 > {
   const scriptTotal: Record<string, number> = {};
@@ -93,7 +93,7 @@ async function calcW1(user: Account[]): Promise<
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW2(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   return [

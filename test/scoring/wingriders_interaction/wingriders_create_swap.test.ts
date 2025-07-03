@@ -20,7 +20,7 @@ describe("wingriders_create_swap", () => {
     //#region Arrange
     const createSwap: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Wingriders",
+      description: "Created a swap order on Wingriders",
       score: 1,
     };
     //#endregion
@@ -112,7 +112,7 @@ describe("wingriders_create_swap", () => {
     //#region Arrange
     const createSwap: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Wingriders",
+      description: "Created a swap order on Wingriders",
       score: 1,
     };
     //#endregion
@@ -204,7 +204,7 @@ describe("wingriders_create_swap", () => {
     //#region Arrange
     const createSwap: TransactionScore = {
       type: "amm_dex",
-      description: "Created a swap transaction on Wingriders",
+      description: "Created a swap order on Wingriders",
       score: .25,
     };
     //#endregion

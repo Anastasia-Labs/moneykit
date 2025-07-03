@@ -24,9 +24,9 @@ export async function score(
   txUTXOs: TransactionUTXOs,
 ): Promise<TransactionScore> {
   const weights = await Promise.all([
-    calcW1(intermediaryTx.accounts.user),
-    calcW2(intermediaryTx.accounts.other, txUTXOs),
-    calcW3(intermediaryTx.metadata),
+    calcUserAccountsWeight(intermediaryTx.accounts.user),
+    calcOtherAccountsWeight(intermediaryTx.accounts.other, txUTXOs),
+    calcMetadataWeight(intermediaryTx.metadata),
   ]);
 
   const [, qty] = weights[0];
@@ -47,7 +47,7 @@ export async function score(
  * @param user User Accounts
  * @returns [Score, AdditionalData]
  */
-async function calcW1(user: Account[]): Promise<CalculatedScore<number>> {
+async function calcUserAccountsWeight(user: Account[]): Promise<CalculatedScore<number>> {
   const lpTokens = user.reduce(
     (sum, { total }) =>
       total.reduce(
@@ -75,7 +75,7 @@ async function calcW1(user: Account[]): Promise<CalculatedScore<number>> {
  * @param txUTXOs Blockfrost TransactionUTXOs
  * @returns [Score, AdditionalData]
  */
-async function calcW2(
+async function calcOtherAccountsWeight(
   other: Account[],
   txUTXOs: TransactionUTXOs,
 ): Promise<
@@ -123,7 +123,7 @@ async function calcW2(
  * @param metadata Transaction Metadata
  * @returns [Score, AdditionalData]
  */
-async function calcW3(metadata: Record<string, any>[]): Promise<
+async function calcMetadataWeight(metadata: Record<string, any>[]): Promise<
   CalculatedScore<undefined>
 > {
   return [
