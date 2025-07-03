@@ -1,10 +1,4 @@
-.DS_Store
-.devcontainer/
 .direnv/
-.pnpm-store/
-.vscode/
-!.gitkeep
-/data/*
 build/
 crfa-offchain-data-registry/
 

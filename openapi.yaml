@@ -1,10 +1,9 @@
 info:
   title: Transaction Describer
-  version: 0.1.5
+  version: 0.0.0
   license:
     name: MIT
-    url: >-
-      https://raw.githubusercontent.com/Anastasia-Labs/moneykit/refs/heads/main/LICENSE
+    url: ../LICENSE
 openapi: 3.0.4
 servers:
   - description: Development Server
